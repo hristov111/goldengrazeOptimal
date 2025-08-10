@@ -161,6 +161,7 @@ const BrandIntroduction: React.FC<BrandIntroductionProps> = ({ setCurrentPage })
             <div 
               className="aspect-square bg-gradient-to-br from-amber-100 via-stone-200 to-emerald-100 rounded-lg overflow-hidden shadow-2xl relative group cursor-pointer transform transition-all duration-500 hover:scale-105 hover:shadow-3xl md:mt-0"
               onMouseMove={handleMouseMove}
+             onClick={() => setCurrentPage && setCurrentPage('product')}
             >
               <img 
                 src="/product_images/golden_graze1.png" 
