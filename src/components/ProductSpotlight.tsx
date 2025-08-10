@@ -357,7 +357,10 @@ const ProductSpotlight: React.FC<ProductSpotlightProps> = ({ setCurrentPage }) =
               />
               
               {/* Hover overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-amber-400/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <div 
+                className="absolute inset-0 bg-gradient-to-t from-amber-400/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 cursor-pointer"
+                onClick={() => setCurrentPage('product')}
+              ></div>
               
               {/* Glow effect */}
               <div className="absolute -inset-2 bg-gradient-to-r from-amber-400/30 to-amber-600/30 rounded-3xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10"></div>
