@@ -163,7 +163,7 @@ const BrandIntroduction: React.FC<BrandIntroductionProps> = ({ setCurrentPage })
               onMouseMove={handleMouseMove}
             >
               <img 
-                src="/balm_images/firstPic.png" 
+                src="/product_images/golden_graze1.png" 
                 alt="Golden Graze Product" 
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
               />
