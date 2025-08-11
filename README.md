@@ -19,12 +19,7 @@ This repository provides Netlify Functions for sending TikTok server-side events
 
 2. **Environment Variables**:
    ```
-   TIKTOK_ACCESS_TOKEN=your_tiktok_access_token
-   TIKTOK_PIXEL_CODE=D2D03PJC77U4ENLN9SEG
-   TIKTOK_ENDPOINT=https://business-api.tiktok.com/open_api/v1.3/event/track/
-   APP_BASE_URL=https://mygoldengraze.com
-   TIKTOK_PAYLOAD_MODE=default
-   CORS_ALLOW_ORIGIN=https://mygoldengraze.com
+      -------
    ```
 
 3. **Local Development**:
