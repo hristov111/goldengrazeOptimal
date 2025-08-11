@@ -6,26 +6,17 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview --port 4173"
+    "preview": "vite preview --port 4173",
+    "doctor": "node scripts/netlify-doctor.mjs"
   },
   "engines": { "node": ">=18" },
   "dependencies": {
     "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "@supabase/supabase-js": "^2.39.0",
-    "react-hook-form": "^7.48.2",
-    "@hookform/resolvers": "^3.3.2",
-    "zod": "^3.22.4",
-    "lucide-react": "^0.263.1"
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
     "vite": "^5.3.0",
     "@vitejs/plugin-react": "^4.3.0",
-    "typescript": "^5.5.0",
-    "tailwindcss": "^3.4.10",
-    "postcss": "^8.4.40",
-    "autoprefixer": "^10.4.20",
-    "@types/react": "^18.2.66",
-    "@types/react-dom": "^18.2.22"
+    "typescript": "^5.5.0"
   }
 }

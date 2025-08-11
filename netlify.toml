@@ -1,14 +1,17 @@
+# netlify.toml
 [build]
   command   = "npm run build"
-  publish = "public"
+  publish   = "dist"
   functions = "netlify/functions"
 
+# keep API calls on functions
 [[redirects]]
   from = "/api/tiktok/*"
   to   = "/.netlify/functions/:splat"
   status = 200
   force = true
 
+# SPA fallback for React/Vite routes
 [[redirects]]
   from = "/*"
   to   = "/index.html"
