@@ -1,36 +1,52 @@
-# TikTok Server-Side Events for Netlify
+# Golden Graze - TikTok Events Integration
 
-This repository provides Netlify Functions for sending TikTok server-side events to the TikTok Events API.
+Golden Graze skincare website with TikTok server-side event tracking via Netlify Functions.
 
 ## Features
 
-- **Three main endpoints**: CompleteRegistration, PlaceAnOrder, AddToCart
-- **PII hashing**: SHA-256 hashing of email, phone, and external_id before sending
-- **Flexible payload structure**: Support for both default and nested payload modes
-- **Automatic client context**: Extracts IP, User-Agent, ttclid, and ttp from requests
-- **CORS support**: Configurable CORS headers for cross-origin requests
+- **React + TypeScript** frontend with Vite
+- **Supabase** integration for user management and data
+- **TikTok Pixel** tracking with server-side events
+- **Netlify Functions** for secure API endpoints
+- **Responsive design** with Tailwind CSS
 
 ## Setup
 
-1. **Deploy to Netlify**:
-   - Push this repository to GitHub
-   - Connect to Netlify and deploy
-   - Set environment variables in Site settings → Environment variables
+### Local Development
 
-2. **Environment Variables**:
-   ```
-      -------
-   ```
-
-3. **Local Development**:
+1. **Install dependencies**:
    ```bash
-   npm install -g netlify-cli
+   npm ci
+   ```
+
+2. **Environment setup**:
+   ```bash
    cp .env.example .env
-   # Fill in your TikTok access token
+   # Fill in your environment variables
+   ```
+
+3. **Start development**:
+   ```bash
+   npm run dev
+   # or for Netlify Functions testing:
    netlify dev
    ```
 
-## API Endpoints
+### Build and Deploy
+
+1. **Build locally** (sanity check):
+   ```bash
+   npm run build
+   ls dist/index.html   # must exist
+   ```
+
+2. **Deploy to Netlify**:
+   - Push to GitHub
+   - Connect to Netlify
+   - Set environment variables in Site settings → Environment variables
+   - Deploy automatically builds and publishes `dist/`
+
+## TikTok Events API Endpoints
 
 ### POST /api/tiktok/complete_registration
 
@@ -82,11 +98,11 @@ Track add-to-cart events.
 }
 ```
 
-## Testing with cURL
+### Testing with cURL
 
 ```bash
 # Complete Registration
-curl -X POST "https://your-site.netlify.app/api/tiktok/complete_registration" \
+curl -X POST "$YOUR_SITE/api/tiktok/complete_registration" \
   -H "Content-Type: application/json" \
   -d '{
     "email": "user@example.com",
@@ -96,7 +112,7 @@ curl -X POST "https://your-site.netlify.app/api/tiktok/complete_registration" \
   }'
 
 # Add to Cart
-curl -X POST "https://your-site.netlify.app/api/tiktok/add_to_cart" \
+curl -X POST "$YOUR_SITE/api/tiktok/add_to_cart" \
   -H "Content-Type: application/json" \
   -d '{
     "value": 49,
@@ -109,7 +125,7 @@ curl -X POST "https://your-site.netlify.app/api/tiktok/add_to_cart" \
   }'
 
 # Place Order
-curl -X POST "https://your-site.netlify.app/api/tiktok/place_order" \
+curl -X POST "$YOUR_SITE/api/tiktok/place_order" \
   -H "Content-Type: application/json" \
   -d '{
     "value": 49,
@@ -120,6 +136,22 @@ curl -X POST "https://your-site.netlify.app/api/tiktok/place_order" \
     "email": "buyer@example.com",
     "url": "https://mygoldengraze.com/thank-you?order=123"
   }'
+```
+
+## Environment Variables
+
+Set these in Netlify Site settings → Environment variables:
+
+```
+TIKTOK_ACCESS_TOKEN=YOUR_TIKTOK_ACCESS_TOKEN
+TIKTOK_PIXEL_CODE=D2D03PJC77U4ENLN9SEG
+TIKTOK_ENDPOINT=https://business-api.tiktok.com/open_api/v1.3/event/track/
+APP_BASE_URL=https://mygoldengraze.com
+TIKTOK_TEST_EVENT_CODE=
+TIKTOK_PAYLOAD_MODE=default
+CORS_ALLOW_ORIGIN=https://mygoldengraze.com
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
 ## Frontend Integration
@@ -141,18 +173,26 @@ TT_S2S.addToCart({
 </script>
 ```
 
+## Acceptance Criteria
+
+✅ `npm run build` generates `dist/index.html`  
+✅ Netlify deploy logs show "Publishing directory: dist"  
+✅ Site root returns the React app (not Netlify 404)  
+✅ API routes work under `/api/tiktok/*`  
+✅ No secret values in client code or repo  
+
 ## Security Features
 
-- **PII Protection**: All email, phone, and external_id values are SHA-256 hashed before sending
-- **Environment Variables**: Sensitive tokens are stored securely in environment variables
-- **Input Validation**: Required fields are validated before processing
-- **Error Handling**: Clear error messages and proper HTTP status codes
+- **PII Protection**: All email, phone, and external_id values are SHA-256 hashed server-side
+- **Environment Variables**: Sensitive tokens stored securely in Netlify environment variables
+- **Input Validation**: Required fields validated before processing
+- **CORS Protection**: Configurable origin restrictions
 
-## Payload Modes
+## Architecture
 
-The system supports two payload structures via `TIKTOK_PAYLOAD_MODE`:
+- **Frontend**: React + TypeScript + Vite → builds to `dist/`
+- **Backend**: Netlify Functions in `/netlify/functions/`
+- **Database**: Supabase for user data and products
+- **Analytics**: TikTok Pixel + Server-side Events API
 
-- **default**: Flat structure with all fields at the root level
-- **nested**: Structured with separate `properties` and `user` objects
-
-This flexibility allows easy adaptation to TikTok API changes without code modifications.
+The system supports flexible payload structures via `TIKTOK_PAYLOAD_MODE` for easy adaptation to TikTok API changes.
