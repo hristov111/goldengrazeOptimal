@@ -1,0 +1,21 @@
+[build]
+  publish = "public"
+  functions = "netlify/functions"
+
+[[redirects]]
+  from = "/api/tiktok/complete_registration"
+  to   = "/.netlify/functions/complete_registration"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/tiktok/place_order"
+  to   = "/.netlify/functions/place_order"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/tiktok/add_to_cart"
+  to   = "/.netlify/functions/add_to_cart"
+  status = 200
+  force = true
