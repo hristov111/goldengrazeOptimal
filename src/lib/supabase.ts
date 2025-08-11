@@ -5,7 +5,7 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
 let supabase: any;
 
-if (!supabaseUrl || !supabaseAnonKey) {
+if (!supabaseUrl || !supabaseAnonKey || supabaseUrl === 'your_supabase_url' || supabaseAnonKey === 'your_supabase_anon_key') {
   console.warn('Missing Supabase environment variables. Please connect to Supabase to enable full functionality.')
   // Create a mock client to prevent app crashes
   const mockClient = {
@@ -62,19 +62,25 @@ if (!supabaseUrl || !supabaseAnonKey) {
   
   supabase = mockClient;
 } else {
-  supabase = createClient(supabaseUrl, supabaseAnonKey, {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true
-    },
-    global: {
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
+  try {
+    supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true
+      },
+      global: {
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
       }
-    }
-  });
+    });
+  } catch (error) {
+    console.error('Failed to initialize Supabase client:', error);
+    // Fall back to mock client if initialization fails
+    supabase = mockClient;
+  }
 }
 
 export { supabase };
