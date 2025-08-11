@@ -10,14 +10,44 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <!-- TikTok Pixel Code Start -->
     <script>
+    // Graceful handling for blocked TikTok pixel
+    window.ttqLoadError = false;
+    
     !function (w, d, t) {
       w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie","holdConsent","revokeConsent","grantConsent"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(
     var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){var r="https://analytics.tiktok.com/i18n/pixel/events.js",o=n&&n.partner;ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=r,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};n=document.createElement("script")
-    ;n.type="text/javascript",n.async=!0,n.src=r+"?sdkid="+e+"&lib="+t;e=document.getElementsByTagName("script")[0];e.parentNode.insertBefore(n,e)};
+    ;n.type="text/javascript",n.async=!0,n.src=r+"?sdkid="+e+"&lib="+t;
+    // Add error handling for blocked scripts
+    n.onerror=function(){window.ttqLoadError=true;console.warn('TikTok pixel blocked by ad blocker or network - tracking will use server-side fallback');};
+    e=document.getElementsByTagName("script")[0];e.parentNode.insertBefore(n,e)};
     
+    // Wrap ttq calls in try-catch to prevent errors when blocked
+    const originalTtq = ttq;
+    window.ttq = new Proxy(originalTtq, {
+      get: function(target, prop) {
+        if (typeof target[prop] === 'function') {
+          return function(...args) {
+            try {
+              return target[prop].apply(target, args);
+            } catch (e) {
+              if (!window.ttqLoadError) {
+                console.warn('TikTok pixel call failed:', prop, e.message);
+              }
+              return undefined;
+            }
+          };
+        }
+        return target[prop];
+      }
+    });
     
+    try {
       ttq.load('D2D03PJC77U4ENLN9SEG');
       ttq.page();
+    } catch (e) {
+      window.ttqLoadError = true;
+      console.warn('TikTok pixel initialization failed - likely blocked by ad blocker');
+    }
     }(window, document, 'ttq');
     </script>
     <!-- TikTok Pixel Code End -->
