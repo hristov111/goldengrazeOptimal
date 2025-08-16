@@ -78,6 +78,10 @@ const Order = () => {
   });
 
   useEffect(() => {
+    console.log('🔄 Order component mounted');
+    console.log('📊 Auth loading state:', authLoading);
+    console.log('🔐 Is logged in:', isLoggedIn);
+    console.log('👤 User data:', user);
     loadUserProfile();
   }, [isLoggedIn, user]);
 
@@ -112,7 +116,6 @@ const Order = () => {
         
         // Prefill form with saved data
         const newFormData = {
-          ...prev,
           fullName: profile.full_name || user.name || '',
           email: user.email || '',
           phone: profile.phone || '',
@@ -124,9 +127,7 @@ const Order = () => {
           notes: ''
         };
         console.log('📝 Setting form data:', newFormData);
-        setFormData(prev => ({
-          ...newFormData
-        }));
+        setFormData(newFormData);
       } else {
         console.log('⚠️ No profile found, using basic user data');
         // No profile found, use basic user data

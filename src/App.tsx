@@ -5,7 +5,7 @@ import { CartProvider } from './contexts/CartContext';
 import { WishlistProvider } from './contexts/WishlistContext';
 import Navigation from './components/Navigation';
 import HomePage from './pages/HomePage';
-import OrderPage from './pages/OrderPage';
+import Order from './pages/Order';
 import ProductPage from './pages/ProductPage';
 import ProductsPage from './pages/ProductsPage';
 import CartPage from './pages/CartPage';
@@ -46,7 +46,7 @@ const AppContent: React.FC = () => {
             <Footer />
           </div>
         } />
-        <Route path="/order" element={<OrderPage />} />
+        <Route path="/order" element={<Order />} />
         <Route path="/product" element={
           <div>
             <ProductPage />
