@@ -90,10 +90,8 @@ export default function CheckoutForm() {
 
   // Get session
   useEffect(() => {
-    console.log('🔄 CheckoutForm mounted, getting session...');
     supabase.auth.getSession().then(({ data }) => {
       const uid = data.session?.user?.id ?? null;
-      console.log('👤 Session user ID:', uid);
       setSessionUserId(uid);
     });
   }, []);
@@ -101,11 +99,9 @@ export default function CheckoutForm() {
   // Prefill from last order (if any)
   useEffect(() => {
     if (!sessionUserId) {
-      console.log('❌ No session user, skipping prefill');
       return;
     }
     
-    console.log('🔍 Fetching last order for prefill...');
     setPrefillLoading(true);
     
     (async () => {
@@ -118,11 +114,7 @@ export default function CheckoutForm() {
           .limit(1)
           .maybeSingle();
         
-        console.log('📦 Last order data:', data);
-        console.log('❌ Last order error:', error);
-        
         if (data) {
-          console.log('✅ Prefilling form with last order data');
           setShipping({
             name: data.shipping_name ?? "",
             phone: data.shipping_phone ?? "",
@@ -134,10 +126,8 @@ export default function CheckoutForm() {
             country: data.shipping_country ?? "US",
           });
         } else {
-          console.log('ℹ️ No previous orders found, form will remain empty');
         }
       } catch (err) {
-        console.error('❌ Error fetching last order:', err);
       } finally {
         setPrefillLoading(false);
       }
@@ -145,7 +135,6 @@ export default function CheckoutForm() {
   }, [sessionUserId]);
 
   const update = (k: keyof Shipping, v: string) => {
-    console.log(`📝 Updating ${k}:`, v);
     setShipping((s) => ({ ...s, [k]: v }));
   };
 
@@ -167,10 +156,7 @@ export default function CheckoutForm() {
   };
 
   async function placeOrder() {
-    console.log('🛒 Place order clicked');
-    
     if (!validateForm()) {
-      console.log('❌ Form validation failed');
       return;
     }
     
@@ -179,12 +165,8 @@ export default function CheckoutForm() {
     setResult(null);
     
     try {
-      console.log('🔐 Getting auth token...');
       const token = (await supabase.auth.getSession()).data.session?.access_token;
       const userId = (await supabase.auth.getSession()).data.session?.user?.id || null;
-      
-      console.log('📤 Calling place-order Edge Function...');
-      console.log('📦 Order data:', { quantity, shipping, notes });
       
       const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/place-order`, {
         method: "POST",
@@ -201,16 +183,24 @@ export default function CheckoutForm() {
         })
       });
       
-      console.log('📥 Response status:', res.status);
-      const json = await res.json();
-      console.log('📥 Response data:', json);
+      if (!res.ok) {
+        const errorText = await res.text();
+        let errorMessage = 'Order failed';
+        
+        try {
+          const errorJson = JSON.parse(errorText);
+          errorMessage = errorJson.error || errorMessage;
+        } catch {
+          errorMessage = errorText || errorMessage;
+        }
+        
+        throw new Error(errorMessage);
+      }
       
-      if (!res.ok) throw new Error(json?.error || "Order failed");
+      const json = await res.json();
 
-      console.log('✅ Order placed successfully!');
       setResult(json);
     } catch (e: any) {
-      console.error('❌ Order placement error:', e);
       setError(e.message || String(e));
     } finally {
       setLoading(false);

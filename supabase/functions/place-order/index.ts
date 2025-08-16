@@ -24,21 +24,63 @@ Deno.serve(async (req: Request) => {
     });
   }
 
+  if (req.method !== "POST") {
+    return new Response(JSON.stringify({ error: "Method not allowed" }), {
+      status: 405,
+      headers: { ...corsHeaders, "Content-Type": "application/json" }
+    });
+  }
+
   try {
-    const body = await req.json();
+    let body;
+    try {
+      body = await req.json();
+    } catch {
+      return new Response(JSON.stringify({ error: "Invalid JSON in request body" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+
     const authHeader = req.headers.get("Authorization");
-    let userId = null;
+    let userId = body?.userId || null;
     
-    if (authHeader?.startsWith("Bearer ")) {
-      const token = authHeader.substring(7);
-      // For simplicity, we'll get userId from the request body if provided
-      userId = body?.userId || null;
+    // If no userId in body but we have auth header, try to get it from token
+    if (!userId && authHeader?.startsWith("Bearer ")) {
+      try {
+        const supabaseAuth = createClient(
+          Deno.env.get("SUPABASE_URL")!,
+          Deno.env.get("SUPABASE_ANON_KEY")!
+        );
+        
+        const { data: { user } } = await supabaseAuth.auth.getUser(authHeader.substring(7));
+        userId = user?.id || null;
+      } catch {
+        // If token is invalid, continue with null userId (guest checkout)
+      }
     }
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
+
+    // Validate shipping data first
+    const s = body?.shipping ?? {};
+    const missing = ["name","phone","address1","city","state","postal","country"]
+      .filter((k) => !s[k]);
+    if (missing.length) {
+      return new Response(JSON.stringify({ error: `Missing required fields: ${missing.join(", ")}` }), { 
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+    if ((s.country || "").toUpperCase() !== "US") {
+      return new Response(JSON.stringify({ error: "Only US shipping is currently supported" }), { 
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
 
     // Get the first available product from the database
     const { data: product, error: productError } = await supabase
@@ -49,7 +91,10 @@ Deno.serve(async (req: Request) => {
       .single();
     
     if (productError || !product) {
-      return new Response(JSON.stringify({ error: "No products available" }), { 
+      return new Response(JSON.stringify({ 
+        error: "No active products available in the database",
+        details: productError?.message 
+      }), { 
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
@@ -66,23 +111,6 @@ Deno.serve(async (req: Request) => {
 
     const qty = Math.max(1, Number(body?.quantity ?? 1));
 
-    // Validate shipping (US)
-    const s = body?.shipping ?? {};
-    const missing = ["name","phone","address1","city","state","postal","country"]
-      .filter((k) => !s[k]);
-    if (missing.length) {
-      return new Response(JSON.stringify({ error: `Missing: ${missing.join(", ")}` }), { 
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
-      });
-    }
-    if ((s.country || "").toUpperCase() !== "US") {
-      return new Response(JSON.stringify({ error: "Only US shipping supported" }), { 
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
-      });
-    }
-
     // Totals
     const subtotal = PRODUCT.unit_price_cents * qty;
     const shipping = 599;           // flat $5.99 example
@@ -91,8 +119,8 @@ Deno.serve(async (req: Request) => {
 
     const orderNumber = makeOrderNumber();
 
-    // RPC call
-    const { data, error } = await supabase.rpc("create_order_with_items", {
+    // Check if RPC function exists, if not create order manually
+    const { data: rpcData, error: rpcError } = await supabase.rpc("create_order_with_items", {
       p_user_id: userId,
       p_order_number: orderNumber,
       p_currency: PRODUCT.currency,
@@ -123,11 +151,109 @@ Deno.serve(async (req: Request) => {
       }]
     });
 
-    if (error) throw error;
+    if (rpcError) {
+      // If RPC doesn't exist, create order manually
+      if (rpcError.message?.includes('function') && rpcError.message?.includes('does not exist')) {
+        // Create order manually
+        const { data: orderData, error: orderError } = await supabase
+          .from('orders')
+          .insert({
+            user_id: userId,
+            order_number: orderNumber,
+            status: 'pending',
+            currency: PRODUCT.currency,
+            subtotal_cents: subtotal,
+            shipping_cents: shipping,
+            tax_cents: tax,
+            total_cents: total,
+            shipping_name: s.name,
+            shipping_phone: s.phone,
+            shipping_address1: s.address1,
+            shipping_address2: s.address2 || null,
+            shipping_city: s.city,
+            shipping_state: s.state,
+            shipping_postal: s.postal,
+            shipping_country: s.country,
+            metadata: {
+              source: body?.source ?? null,
+              notes: body?.notes ?? null,
+            }
+          })
+          .select()
+          .single();
+        
+        if (orderError) {
+          return new Response(JSON.stringify({ 
+            error: "Failed to create order",
+            details: orderError.message 
+          }), { 
+            status: 500,
+            headers: { ...corsHeaders, "Content-Type": "application/json" }
+          });
+        }
+        
+        // Create order items
+        const { error: itemsError } = await supabase
+          .from('order_items')
+          .insert({
+            order_id: orderData.id,
+            product_id: PRODUCT.product_id,
+            sku: PRODUCT.sku,
+            product_name: PRODUCT.product_name,
+            quantity: qty,
+            unit_price_cents: PRODUCT.unit_price_cents,
+            image_url: PRODUCT.image_url,
+            currency: PRODUCT.currency
+          });
+        
+        if (itemsError) {
+          return new Response(JSON.stringify({ 
+            error: "Failed to create order items",
+            details: itemsError.message 
+          }), { 
+            status: 500,
+            headers: { ...corsHeaders, "Content-Type": "application/json" }
+          });
+        }
+        
+        // Use orderData as the result
+        const data = orderData;
+        
+        return new Response(JSON.stringify({
+          ok: true,
+          order: data,
+          totals: {
+            subtotal_cents: subtotal,
+            shipping_cents: shipping,
+            tax_cents: tax,
+            total_cents: total,
+            human: {
+              subtotal: `$${dollars(subtotal)}`,
+              shipping: `$${dollars(shipping)}`,
+              tax: `$${dollars(tax)}`,
+              total: `$${dollars(total)}`
+            }
+          }
+        }), { 
+          headers: { 
+            ...corsHeaders,
+            "Content-Type": "application/json" 
+          } 
+        });
+      } else {
+        return new Response(JSON.stringify({ 
+          error: "Database operation failed",
+          details: rpcError.message 
+        }), { 
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+    }
 
     return new Response(JSON.stringify({
       ok: true,
-      order: data,
+      order: rpcData,
       totals: {
         subtotal_cents: subtotal,
         shipping_cents: shipping,
@@ -148,7 +274,10 @@ Deno.serve(async (req: Request) => {
     });
 
   } catch (e: any) {
-    return new Response(JSON.stringify({ error: String(e?.message ?? e) }), { 
+    return new Response(JSON.stringify({ 
+      error: "Internal server error",
+      details: String(e?.message ?? e) 
+    }), { 
       status: 500,
       headers: { 
         ...corsHeaders,
