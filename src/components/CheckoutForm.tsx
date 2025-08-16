@@ -430,41 +430,6 @@ export default function CheckoutForm() {
                 </div>
               </div>
 
-              {/* Product Loading */}
-              {loadingProduct ? (
-                <div className="flex items-center justify-center py-8 mb-6">
-                  <Loader2 size={24} className="text-amber-400 animate-spin" />
-                </div>
-              ) : (
-                /* Product */
-                <div className="flex items-center space-x-4 mb-6 p-4 bg-stone-50 rounded-lg">
-                  <div className="w-16 h-16 bg-gradient-to-br from-amber-100 to-amber-200 rounded-lg flex items-center justify-center">
-                    {productImage ? (
-                      <img 
-                        src={productImage}
-                        alt={product?.name || 'Product'}
-                        className="w-full h-full object-cover rounded-lg"
-                        onError={(e) => {
-                          if (e.currentTarget.src.includes('golden_graze1.png')) {
-                            e.currentTarget.src = "/balm_images/firstPic.png";
-                          } else if (e.currentTarget.src.includes('firstPic.png')) {
-                            e.currentTarget.src = "/balm_images/Golder Graze.png";
-                          }
-                        }}
-                      />
-                    ) : (
-                      <Package size={24} className="text-amber-600" />
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-medium text-stone-900">{product?.name || 'Golden Graze Whipped Tallow Balm'}</h4>
-                    <p className="text-stone-600 text-sm">{product?.size || '4oz jar'}</p>
-                    <p className="text-amber-600 text-sm">{product?.scent && product.scent !== 'unscented' ? product.scent : 'Unscented'}</p>
-                    <p className="text-stone-600 text-sm">Qty: {quantity}</p>
-                  </div>
-                </div>
-              )}
-
               {/* Phone & Quantity */}
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
