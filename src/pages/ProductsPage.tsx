@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Star, Heart, ShoppingBag, Loader2, AlertCircle } from 'lucide-react';
 import { database } from '../lib/supabase';
 import { supabase } from '../lib/supabase';
@@ -23,10 +24,10 @@ interface Product {
 }
 
 interface ProductsPageProps {
-  setCurrentPage: (page: string) => void;
 }
 
-const ProductsPage: React.FC<ProductsPageProps> = ({ setCurrentPage }) => {
+const ProductsPage: React.FC<ProductsPageProps> = () => {
+  const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -226,12 +227,12 @@ const ProductsPage: React.FC<ProductsPageProps> = ({ setCurrentPage }) => {
 
   const handleAuthModalSignIn = () => {
     setShowAuthModal(false);
-    setCurrentPage('signin');
+    navigate('/signin');
   };
 
   const handleAuthModalSignUp = () => {
     setShowAuthModal(false);
-    setCurrentPage('signup');
+    navigate('/signup');
   };
 
   const formatPrice = (price: number) => {
@@ -269,7 +270,7 @@ const ProductsPage: React.FC<ProductsPageProps> = ({ setCurrentPage }) => {
           isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
         }`}>
           <button
-            onClick={() => setCurrentPage('home')}
+            onClick={() => navigate('/')}
             className="flex items-center space-x-2 text-stone-600 hover:text-amber-600 transition-colors mb-8 group"
           >
             <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
@@ -326,7 +327,7 @@ const ProductsPage: React.FC<ProductsPageProps> = ({ setCurrentPage }) => {
                   Our sacred collection is being prepared. Please check back soon for our ancestrally inspired skincare rituals.
                 </p>
                 <button
-                  onClick={() => setCurrentPage('home')}
+                  onClick={() => navigate('/')}
                   className="bg-amber-400 hover:bg-amber-500 text-white px-8 py-4 tracking-widest transition-all duration-300 rounded-lg font-medium transform hover:scale-105"
                 >
                   RETURN HOME
@@ -342,7 +343,7 @@ const ProductsPage: React.FC<ProductsPageProps> = ({ setCurrentPage }) => {
                       isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
                     } cursor-pointer`}
                     style={{ transitionDelay: `${index * 200}ms` }}
-                    onClick={() => setCurrentPage('product')}
+                    onClick={() => navigate('/product')}
                   >
                     {/* Product Image */}
                     <div className="aspect-square bg-gradient-to-br from-amber-100 to-amber-200 rounded-xl mb-6 flex items-center justify-center shadow-lg relative group overflow-hidden">
@@ -470,7 +471,7 @@ const ProductsPage: React.FC<ProductsPageProps> = ({ setCurrentPage }) => {
                 Each product is crafted with ancestral wisdom and modern luxury. Start your transformation today.
               </p>
               <button
-                onClick={() => setCurrentPage('home')}
+                onClick={() => navigate('/')}
                 className="group relative px-8 py-4 bg-amber-400 hover:bg-amber-500 text-white font-medium tracking-widest transition-all duration-300 rounded-lg"
               >
                 <span className="flex items-center space-x-2">
