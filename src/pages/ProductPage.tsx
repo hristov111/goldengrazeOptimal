@@ -325,7 +325,7 @@ const ProductPage: React.FC<ProductPageProps> = ({
               <BuyNowButton
                 productId={product.id}
                 productName={product.name}
-                onClick={() => navigate('/checkout')}
+                onClick={() => setCurrentPage('checkout')}
                 size="lg"
               />
               
