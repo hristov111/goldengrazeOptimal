@@ -3,13 +3,13 @@ import { createClient } from 'npm:@supabase/supabase-js@2'
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, Idempotency-Key",
 };
 
 function makeOrderNumber() {
-  const n = Math.floor(Math.random() * 1e6).toString().padStart(6, "0");
-  const y = new Date().getFullYear();
-  return `GG-${y}-${n}`;
+  const ts = new Date().toISOString().replace(/[-:.TZ]/g, '').slice(0,14); // YYYYMMDDhhmmss
+  const rand = Math.floor(Math.random() * 1e5).toString().padStart(5, '0');
+  return `GG-${ts}-${rand}`;
 }
 
 function dollars(cents: number) {
@@ -17,6 +17,19 @@ function dollars(cents: number) {
 }
 
 Deno.serve(async (req: Request) => {
+  // Handle CORS preflight
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { status: 204, headers: corsHeaders });
+  }
+  
+  // Only allow POST requests
+  if (req.method !== 'POST') {
+    return new Response(JSON.stringify({ error: "Method not allowed" }), {
+      status: 405,
+      headers: { ...corsHeaders, "Content-Type": "application/json" }
+    });
+  }
+
   try {
     // Parse request body
     let body;
@@ -73,10 +86,28 @@ Deno.serve(async (req: Request) => {
 
     // Validate shipping data
     const s = body?.shipping ?? {};
+    const clean = (v: unknown) => String(v ?? '').trim();
+    s.name = clean(s.name);
+    s.phone = clean(s.phone);
+    s.address1 = clean(s.address1);
+    s.address2 = clean(s.address2);
+    s.city = clean(s.city);
+    s.state = clean(s.state).toUpperCase();
+    s.postal = clean(s.postal);
+    s.country = (clean(s.country) || 'US').toUpperCase();
+    
     const missing = ["name","phone","address1","city","state","postal","country"]
       .filter((k) => !s[k]);
     if (missing.length) {
       return new Response(JSON.stringify({ error: `Missing required fields: ${missing.join(", ")}` }), { 
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+    
+    // Validate ZIP code format
+    if (!/^\d{5}(-\d{4})?$/.test(s.postal)) {
+      return new Response(JSON.stringify({ error: "Invalid US ZIP code format" }), { 
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
@@ -204,12 +235,19 @@ Deno.serve(async (req: Request) => {
           });
         }
         
+        // Create order event for traceability
+        await supabase.from('order_events').insert({
+          order_id: orderData.id,
+          type: 'created',
+          message: 'Order created via site_checkout'
+        });
+        
         // Use orderData as the result
-        const data = orderData;
+        const created = orderData;
         
         return new Response(JSON.stringify({
           ok: true,
-          order: data,
+          order: created,
           totals: {
             subtotal_cents: subtotal,
             shipping_cents: shipping,
@@ -239,9 +277,12 @@ Deno.serve(async (req: Request) => {
       }
     }
 
+    // Handle RPC response (could be array or single object)
+    const created = Array.isArray(rpcData) ? rpcData[0] : rpcData;
+    
     return new Response(JSON.stringify({
       ok: true,
-      order: rpcData,
+      order: created,
       totals: {
         subtotal_cents: subtotal,
         shipping_cents: shipping,

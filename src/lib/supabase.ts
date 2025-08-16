@@ -1,5 +1,63 @@
 import { createClient } from '@supabase/supabase-js'
 
+// Create mock client factory function
+const makeMockClient = () => ({
+  auth: {
+    signUp: async () => ({ data: null, error: { message: 'Please connect to Supabase first' } }),
+    signInWithPassword: async () => ({ data: null, error: { message: 'Please connect to Supabase first' } }),
+    signOut: async () => ({ error: null }),
+    getUser: async () => ({ data: { user: null }, error: null }),
+    onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+    updateUser: async () => ({ data: null, error: { message: 'Please connect to Supabase first' } }),
+    getSession: async () => ({ data: { session: null }, error: null })
+  },
+  from: () => ({
+    select: () => ({
+      eq: () => ({
+        maybeSingle: async () => ({ data: null, error: { message: 'Please connect to Supabase first' } }),
+        single: async () => ({ data: null, error: { message: 'Please connect to Supabase first' } }),
+        order: () => ({
+          limit: () => ({
+            maybeSingle: async () => ({ data: null, error: { message: 'Please connect to Supabase first' } })
+          })
+        })
+      }),
+      order: () => ({ data: [], error: null }),
+      range: () => ({ data: [], error: null })
+    }),
+    insert: () => ({
+      select: () => ({
+        single: async () => ({ data: null, error: { message: 'Please connect to Supabase first' } })
+      })
+    }),
+    update: () => ({
+      eq: () => ({
+        select: () => ({
+          single: async () => ({ data: null, error: { message: 'Please connect to Supabase first' } })
+        })
+      })
+    }),
+    delete: () => ({
+      eq: async () => ({ error: { message: 'Please connect to Supabase first' } })
+    }),
+    upsert: () => ({
+      select: () => ({
+        single: async () => ({ data: null, error: { message: 'Please connect to Supabase first' } })
+      })
+    })
+  }),
+  storage: {
+    from: () => ({
+      createSignedUrl: async () => ({ data: null, error: { message: 'Please connect to Supabase first' } }),
+      getPublicUrl: () => ({ data: { publicUrl: '' } })
+    })
+  },
+  rpc: () => ({ data: null, error: { message: 'Please connect to Supabase first' } })
+});
+
+// Create mock client instance
+const mockClient = makeMockClient();
+
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
@@ -7,59 +65,6 @@ let supabase: any;
 
 if (!supabaseUrl || !supabaseAnonKey || supabaseUrl === 'your_supabase_url' || supabaseAnonKey === 'your_supabase_anon_key') {
   console.warn('Missing Supabase environment variables. Please connect to Supabase to enable full functionality.')
-  // Create a mock client to prevent app crashes
-  const mockClient = {
-    auth: {
-      signUp: async () => ({ data: null, error: { message: 'Please connect to Supabase first' } }),
-      signInWithPassword: async () => ({ data: null, error: { message: 'Please connect to Supabase first' } }),
-      signOut: async () => ({ error: null }),
-      getUser: async () => ({ data: { user: null }, error: null }),
-      onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
-      updateUser: async () => ({ data: null, error: { message: 'Please connect to Supabase first' } })
-    },
-    from: () => ({
-      select: () => ({
-        eq: () => ({
-          maybeSingle: async () => ({ data: null, error: { message: 'Please connect to Supabase first' } }),
-          single: async () => ({ data: null, error: { message: 'Please connect to Supabase first' } }),
-          order: () => ({
-            limit: () => ({
-              maybeSingle: async () => ({ data: null, error: { message: 'Please connect to Supabase first' } })
-            })
-          })
-        }),
-        order: () => ({ data: [], error: null }),
-        range: () => ({ data: [], error: null })
-      }),
-      insert: () => ({
-        select: () => ({
-          single: async () => ({ data: null, error: { message: 'Please connect to Supabase first' } })
-        })
-      }),
-      update: () => ({
-        eq: () => ({
-          select: () => ({
-            single: async () => ({ data: null, error: { message: 'Please connect to Supabase first' } })
-          })
-        })
-      }),
-      delete: () => ({
-        eq: async () => ({ error: { message: 'Please connect to Supabase first' } })
-      }),
-      upsert: () => ({
-        select: () => ({
-          single: async () => ({ data: null, error: { message: 'Please connect to Supabase first' } })
-        })
-      })
-    }),
-    storage: {
-      from: () => ({
-        createSignedUrl: async () => ({ data: null, error: { message: 'Please connect to Supabase first' } }),
-        getPublicUrl: () => ({ data: { publicUrl: '' } })
-      })
-    }
-  };
-  
   supabase = mockClient;
 } else {
   try {
@@ -78,7 +83,7 @@ if (!supabaseUrl || !supabaseAnonKey || supabaseUrl === 'your_supabase_url' || s
     });
   } catch (error) {
     console.error('Failed to initialize Supabase client:', error);
-    // Fall back to mock client if initialization fails
+    // Fall back to mock client if initialization fails  
     supabase = mockClient;
   }
 }
