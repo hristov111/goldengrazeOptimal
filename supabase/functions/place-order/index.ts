@@ -1,7 +1,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 
 const PRODUCT = {
-  product_id: "golden-graze-4oz",
+  product_id: null,
   sku: "GG-TALLOW-4OZ", 
   product_name: "Golden Graze Whipped Tallow Balm — 4oz",
   unit_price_cents: 2999,
