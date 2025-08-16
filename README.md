@@ -200,8 +200,7 @@ The system supports flexible payload structures via `TIKTOK_PAYLOAD_MODE` for ea
 ## Guest Checkout Setup
 
 ### Environment Setup
-- Copy `.env.local.example` → `.env.local` and fill VITE vars (frontend)
-- Copy `supabase/functions/.env.example` → `supabase/functions/.env` and fill server secrets
+- Copy `.env.example` → `.env` and fill all environment variables (both frontend VITE vars and server secrets)
 
 ### Local Development
 ```bash

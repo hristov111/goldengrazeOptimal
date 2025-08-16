@@ -8,8 +8,8 @@
     "build": "vite build",
     "preview": "vite preview --port 4173",
     "doctor": "node scripts/netlify-doctor.mjs",
-    "functions:serve": "supabase functions serve place-order --env-file ./supabase/functions/.env --no-verify-jwt",
-    "functions:deploy": "supabase secrets set --env-file ./supabase/functions/.env && supabase functions deploy place-order --no-verify-jwt"
+    "functions:serve": "supabase functions serve place-order --env-file ./.env --no-verify-jwt",
+    "functions:deploy": "supabase secrets set --env-file ./.env && supabase functions deploy place-order --no-verify-jwt"
   },
   "engines": {
     "node": ">=18"
