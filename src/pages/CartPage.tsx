@@ -14,6 +14,15 @@ const CartPage: React.FC<CartPageProps> = ({ setCurrentPage }) => {
   const { user, loading } = useSessionUser();
 
   useEffect(() => {
+    const handleNavigateToCheckout = () => {
+      setCurrentPage('checkout');
+    };
+
+    window.addEventListener('navigateToCheckout', handleNavigateToCheckout);
+    return () => window.removeEventListener('navigateToCheckout', handleNavigateToCheckout);
+  }, [setCurrentPage]);
+
+  useEffect(() => {
     setIsVisible(true);
     // Scroll to top when cart page loads
     window.scrollTo({ top: 0, behavior: 'smooth' });

@@ -76,7 +76,14 @@ const CartTotals: React.FC<CartTotalsProps> = ({ items, className = '' }) => {
           </p>
         </div>
       ) : (
-        <button className="w-full mt-6 bg-amber-400 hover:bg-amber-500 text-white py-4 px-6 tracking-widest transition-all duration-300 rounded-lg font-medium">
+        <button 
+          onClick={() => {
+            // Navigate to checkout page
+            const event = new CustomEvent('navigateToCheckout');
+            window.dispatchEvent(event);
+          }}
+          className="w-full mt-6 bg-amber-400 hover:bg-amber-500 text-white py-4 px-6 tracking-widest transition-all duration-300 rounded-lg font-medium"
+        >
           PROCEED TO CHECKOUT
         </button>
       )}
