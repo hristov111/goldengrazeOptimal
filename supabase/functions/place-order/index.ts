@@ -25,6 +25,16 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
+    const body = await req.json();
+    const authHeader = req.headers.get("Authorization");
+    let userId = null;
+    
+    if (authHeader?.startsWith("Bearer ")) {
+      const token = authHeader.substring(7);
+      // For simplicity, we'll get userId from the request body if provided
+      userId = body?.userId || null;
+    }
+
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
@@ -54,23 +64,6 @@ Deno.serve(async (req: Request) => {
       currency: "USD",
     };
 
-    // Get the first available product from the database
-    const { data: product, error: productError } = await supabase
-      .from('products')
-      .select('id, name, price, image_url')
-      .eq('is_active', true)
-      .limit(1)
-      .single();
-    
-    if (productError || !product) {
-      return new Response(JSON.stringify({ error: "No products available" }), { 
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
-      });
-    }
-
-    const PRODUCT = {
-    }
     const qty = Math.max(1, Number(body?.quantity ?? 1));
 
     // Validate shipping (US)
