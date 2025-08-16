@@ -74,8 +74,32 @@ Deno.serve(async (req: Request) => {
     // Initialize Supabase client
     const supabase = createClient(SUPABASE_URL, SERVICE_ROLE);
 
-    // Get user ID from body
-    const userId = body?.userId || null;
+    // Extract user ID from JWT token in Authorization header
+    const authHeader = req.headers.get("Authorization");
+    let userId = body?.userId || null;
+    
+    if (!userId && authHeader?.startsWith("Bearer ")) {
+      try {
+        const token = authHeader.substring(7);
+        const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+        if (!userError && user) {
+          userId = user.id;
+        }
+      } catch (authErr) {
+        console.error("Auth token validation failed:", authErr);
+      }
+    }
+    
+    // User ID is required for order creation
+    if (!userId) {
+      return new Response(JSON.stringify({ 
+        error: "Authentication required",
+        details: "Please sign in to place an order"
+      }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
 
     // Get the first available product from the database
     const { data: product, error: productError } = await supabase
