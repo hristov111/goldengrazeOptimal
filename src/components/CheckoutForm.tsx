@@ -7,7 +7,6 @@ import { database } from "../lib/supabase";
 type Shipping = {
   name: string; 
   email: string;
-  email: string;
   phone: string;
   address1: string; 
   address2?: string;
@@ -79,7 +78,6 @@ export default function CheckoutForm() {
   const [loadingProduct, setLoadingProduct] = useState(true);
   const [shipping, setShipping] = useState<Shipping>({
     name: "", 
-    email: "",
     email: "",
     phone: "", 
     address1: "", 
@@ -412,11 +410,31 @@ export default function CheckoutForm() {
                 </div>
               </div>
 
+              {/* Email */}
+              <div>
+                <label className="block text-stone-700 text-sm tracking-wider mb-2">
+                  EMAIL ADDRESS *
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Mail size={18} className="text-stone-400" />
+                  </div>
+                  <input
+                    type="email"
+                    value={shipping.email}
+                    onChange={(e) => update("email", e.target.value)}
+                    required
+                    className="w-full pl-10 pr-4 py-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-200 focus:border-amber-400 transition-colors"
+                    placeholder="your@email.com"
+                  />
+                </div>
+              </div>
+
               {/* Product Loading */}
               {loadingProduct ? (
                 <div className="flex items-center justify-center py-8 mb-6">
                   <Loader2 size={24} className="text-amber-400 animate-spin" />
-                    value={shipping.email}
+                </div>
               ) : (
                 /* Product */
                 <div className="flex items-center space-x-4 mb-6 p-4 bg-stone-50 rounded-lg">
@@ -455,8 +473,12 @@ export default function CheckoutForm() {
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <span className="font-medium text-green-600">FREE</span>
+                      <Phone size={18} className="text-stone-400" />
                     </div>
+                    <input
+                      type="tel"
+                      value={shipping.phone}
+                      onChange={(e) => update("phone", e.target.value)}
                       required
                       className="w-full pl-10 pr-4 py-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-200 focus:border-amber-400 transition-colors"
                       placeholder="(555) 123-4567"
@@ -641,7 +663,7 @@ export default function CheckoutForm() {
               </div>
               <div className="flex justify-between">
                 <span className="text-stone-600">Shipping</span>
-                <span className="font-medium text-stone-900">${(shippingCents / 100).toFixed(2)}</span>
+                <span className="font-medium text-green-600">FREE</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-stone-600">Tax (7%)</span>
