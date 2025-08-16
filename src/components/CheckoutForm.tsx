@@ -166,49 +166,30 @@ export default function CheckoutForm() {
     setResult(null);
     
     try {
-      // Single session fetch to avoid duplicate calls
+      // Get session for user ID
       const { data } = await supabase.auth.getSession();
-      const token = data.session?.access_token ?? null;
       const userId = data.session?.user?.id ?? null;
       
-      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/place-order`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json", 
-          ...(token ? { "Authorization": `Bearer ${token}` } : {}),
-          "Idempotency-Key": crypto.randomUUID()
-        },
+      // Use Supabase SDK to invoke Edge Function
+      const { data: result, error: invokeError } = await supabase.functions.invoke('place-order', {
         body: JSON.stringify({
           userId,
           quantity,
           shipping,
           notes,
           source: "site_checkout"
-        })
+        }),
+        headers: {
+          "Idempotency-Key": crypto.randomUUID()
+        }
       });
       
-      if (!res.ok) {
-        let errorMessage = 'Order failed';
-        let errorDetails = '';
-        
-        try {
-          const errorText = await res.text();
-          const errorJson = JSON.parse(errorText);
-          errorMessage = errorJson.error || errorMessage;
-          errorDetails = errorJson.details || '';
-        } catch {
-          errorMessage = `HTTP ${res.status}: ${res.statusText}`;
-        }
-        
-        // Log for debugging (not user-facing)
-        console.error('Order API Error:', { status: res.status, message: errorMessage, details: errorDetails });
-        
-        throw new Error(errorMessage);
+      if (invokeError) {
+        console.error('Order API Error:', invokeError);
+        throw new Error(invokeError.message || 'Order failed');
       }
       
-      const json = await res.json();
-
-      setResult(json);
+      setResult(result);
     } catch (e: any) {
       setError(e.message || String(e));
     } finally {

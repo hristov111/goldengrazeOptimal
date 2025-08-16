@@ -17,6 +17,20 @@ function dollars(cents: number) {
 }
 
 Deno.serve(async (req: Request) => {
+  // Handle preflight request first
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { status: 204, headers: corsHeaders });
+  }
+
+  // Only allow POST requests
+  if (req.method !== "POST") {
+    return new Response(JSON.stringify({ error: "Method not allowed" }), {
+      status: 405,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  let body: any = null;
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response('ok', { status: 204, headers: corsHeaders });
@@ -31,13 +45,15 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    // Parse request body
-    let body;
-    try {
-      body = await req.json();
-    } catch {
-      return new Response(JSON.stringify({ error: "Invalid JSON in request body" }), {
-        status: 400,
+    body = await req.json();
+  } catch {
+    return new Response(JSON.stringify({ error: "Invalid JSON in request body" }), {
+      status: 400,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  try {
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
