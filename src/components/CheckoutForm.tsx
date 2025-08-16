@@ -170,15 +170,12 @@ export default function CheckoutForm() {
       const { data } = await supabase.auth.getSession();
       const token = data.session?.access_token ?? null;
       const userId = data.session?.user?.id ?? null;
-      const token = data.session?.access_token ?? null;
-      const userId = data.session?.user?.id ?? null;
       
       const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/place-order`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json", 
           ...(token ? { "Authorization": `Bearer ${token}` } : {}),
-          "Idempotency-Key": crypto.randomUUID()
           "Idempotency-Key": crypto.randomUUID()
         },
         body: JSON.stringify({
@@ -190,23 +187,18 @@ export default function CheckoutForm() {
         })
       });
       
+      if (!res.ok) {
         let errorMessage = 'Order failed';
-        let errorDetails = '';
         let errorDetails = '';
         
         try {
           const errorText = await res.text();
-          const errorText = await res.text();
           const errorJson = JSON.parse(errorText);
           errorMessage = errorJson.error || errorMessage;
-          errorDetails = errorJson.details || '';
           errorDetails = errorJson.details || '';
         } catch {
           errorMessage = `HTTP ${res.status}: ${res.statusText}`;
         }
-        
-        // Log for debugging (not user-facing)
-        console.error('Order API Error:', { status: res.status, message: errorMessage, details: errorDetails });
         
         // Log for debugging (not user-facing)
         console.error('Order API Error:', { status: res.status, message: errorMessage, details: errorDetails });
