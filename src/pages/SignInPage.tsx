@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Eye, EyeOff, Mail, Lock } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 interface SignInPageProps {
-  setCurrentPage: (page: string) => void;
-  onSignIn: (email: string, password: string) => Promise<{success: boolean; error?: string}>;
+  setCurrentPage?: (page: string) => void;
 }
 
-const SignInPage: React.FC<SignInPageProps> = ({ setCurrentPage, onSignIn }) => {
+const SignInPage: React.FC<SignInPageProps> = ({ setCurrentPage }) => {
+  const navigate = useNavigate();
+  const { signIn } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -57,10 +60,13 @@ const SignInPage: React.FC<SignInPageProps> = ({ setCurrentPage, onSignIn }) => 
     setAuthError('');
     
     try {
-      const result = await onSignIn(formData.email, formData.password);
+      const result = await signIn(formData.email, formData.password);
       
       if (!result.success && result.error) {
         setAuthError(result.error);
+      } else if (result.success) {
+        // Redirect to home page on successful login
+        navigate('/');
       }
     } catch (error) {
       setAuthError('An unexpected error occurred. Please try again.');
@@ -81,7 +87,7 @@ const SignInPage: React.FC<SignInPageProps> = ({ setCurrentPage, onSignIn }) => 
       <div className="max-w-md mx-auto px-6 py-12 relative z-10">
         {/* Back Button */}
         <button
-          onClick={() => setCurrentPage('home')}
+          onClick={() => navigate('/')}
           className="flex items-center space-x-2 text-stone-600 hover:text-amber-600 transition-colors mb-8 group"
         >
           <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
@@ -204,7 +210,7 @@ const SignInPage: React.FC<SignInPageProps> = ({ setCurrentPage, onSignIn }) => 
           <div className="text-center mt-8 pt-6 border-t border-stone-200">
             <p className="text-stone-600 mb-3">Don't have an account?</p>
             <button
-              onClick={() => setCurrentPage('signup')}
+              onClick={() => navigate('/signup')}
               className="text-amber-600 hover:text-amber-700 font-medium tracking-wider transition-colors hover:scale-105 transform duration-300"
             >
               CREATE ACCOUNT

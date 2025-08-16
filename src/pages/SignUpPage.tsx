@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 // Password strength checker
 const getPasswordStrength = (password: string) => {
@@ -27,11 +29,12 @@ const getPasswordStrength = (password: string) => {
 };
 
 interface SignUpPageProps {
-  setCurrentPage: (page: string) => void;
-  onSignUp: (fullName: string, email: string, password: string) => Promise<{success: boolean; error?: string; message?: string}>;
+  setCurrentPage?: (page: string) => void;
 }
 
-const SignUpPage: React.FC<SignUpPageProps> = ({ setCurrentPage, onSignUp }) => {
+const SignUpPage: React.FC<SignUpPageProps> = ({ setCurrentPage }) => {
+  const navigate = useNavigate();
+  const { signUp } = useAuth();
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -101,12 +104,15 @@ const SignUpPage: React.FC<SignUpPageProps> = ({ setCurrentPage, onSignUp }) => 
     setSuccessMessage('');
     
     try {
-      const result = await onSignUp(formData.fullName, formData.email, formData.password);
+      const result = await signUp(formData.fullName, formData.email, formData.password);
       
       if (!result.success && result.error) {
         setAuthError(result.error);
       } else if (result.message) {
         setSuccessMessage(result.message);
+      } else if (result.success) {
+        // Redirect to home page on successful signup
+        navigate('/');
       }
     } catch (error) {
       setAuthError('An unexpected error occurred. Please try again.');
@@ -127,7 +133,7 @@ const SignUpPage: React.FC<SignUpPageProps> = ({ setCurrentPage, onSignUp }) => 
       <div className="max-w-md mx-auto px-6 py-12 relative z-10">
         {/* Back Button */}
         <button
-          onClick={() => setCurrentPage('home')}
+          onClick={() => navigate('/')}
           className="flex items-center space-x-2 text-stone-600 hover:text-amber-600 transition-colors mb-8 group"
         >
           <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
@@ -305,14 +311,14 @@ const SignUpPage: React.FC<SignUpPageProps> = ({ setCurrentPage, onSignUp }) => 
             <div className="text-sm text-stone-600 bg-stone-50 p-4 rounded-lg">
               By creating an account, you agree to our{' '}
               <button 
-                onClick={() => setCurrentPage('terms-of-service')}
+                onClick={() => navigate('/terms-of-service')}
                 className="text-amber-600 hover:text-amber-700 underline transition-colors"
               >
                 Terms of Service
               </button>{' '}
               and{' '}
               <button 
-                onClick={() => setCurrentPage('privacy-policy')}
+                onClick={() => navigate('/privacy-policy')}
                 className="text-amber-600 hover:text-amber-700 underline transition-colors"
               >
                 Privacy Policy
