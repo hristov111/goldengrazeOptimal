@@ -230,7 +230,7 @@ export const database = {
   getOrders: async (userId: string, offset = 0, limit = 10, filters?: { status?: string; search?: string }) => {
     let query = supabase
       .from('orders')
-      .select('order_number, status, total_cents, currency, placed_at, tracking_number, estimated_delivery')
+      .select('id, order_number, status, total_cents, currency, placed_at, tracking_number, estimated_delivery')
       .eq('user_id', userId)
       .order('placed_at', { ascending: false });
 

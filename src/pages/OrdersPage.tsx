@@ -65,10 +65,17 @@ const OrdersPage: React.FC = () => {
         throw error;
       }
       
+      // Dedupe helper to prevent duplicate orders by ID
+      const uniqById = (rows: any[]) => {
+        const m = new Map<string, any>();
+        for (const r of rows) if (!m.has(r.id)) m.set(r.id, r);
+        return Array.from(m.values());
+      };
+      
       if (reset) {
-        setOrders(data || []);
+        setOrders(uniqById(data || []));
       } else {
-        setOrders(prev => [...prev, ...(data || [])]);
+        setOrders(prev => uniqById([...(prev || []), ...(data || [])]));
       }
       
       setHasMore((data || []).length === limit);
@@ -210,7 +217,7 @@ const OrdersPage: React.FC = () => {
               <div className="space-y-6">
                 {orders.map((order, index) => (
                   <div
-                    key={order.order_number}
+                    key={order.id}
                     className={`transition-all duration-1000 ${
                       isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
                     }`}
