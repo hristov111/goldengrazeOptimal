@@ -39,19 +39,22 @@ Deno.serve(async (req: Request) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Get auth user
+    // Get auth user (optional for guest checkout)
+    let userId = null;
     const authHeader = req.headers.get("Authorization") ?? "";
-    const jwt = authHeader.replace("Bearer ", "");
-    const { data: auth } = await supabase.auth.getUser(jwt);
-    if (!auth?.user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), { 
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
-      });
+    
+    if (authHeader) {
+      const jwt = authHeader.replace("Bearer ", "");
+      const { data: auth } = await supabase.auth.getUser(jwt);
+      userId = auth?.user?.id || null;
     }
-    const userId = auth.user.id;
-
+    
+    // Also check if userId is provided in request body (for guest checkout)
     const body = await req.json();
+    if (!userId && body?.userId) {
+      userId = body.userId;
+    }
+
     const qty = Math.max(1, Number(body?.quantity ?? 1));
 
     // Validate shipping (US)

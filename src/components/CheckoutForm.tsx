@@ -181,18 +181,19 @@ export default function CheckoutForm() {
     try {
       console.log('🔐 Getting auth token...');
       const token = (await supabase.auth.getSession()).data.session?.access_token;
-      if (!token) throw new Error("Please sign in first.");
+      const userId = (await supabase.auth.getSession()).data.session?.user?.id || null;
       
       console.log('📤 Calling place-order Edge Function...');
       console.log('📦 Order data:', { quantity, shipping, notes });
       
       const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/place-order`, {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json", 
-          "Authorization": `Bearer ${token}` 
+          ...(token && { "Authorization": `Bearer ${token}` })
         },
         body: JSON.stringify({
+          userId,
           quantity,
           shipping,
           notes,
