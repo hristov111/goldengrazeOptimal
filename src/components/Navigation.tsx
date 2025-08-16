@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ShoppingBag, Menu, X, ChevronDown, Heart } from 'lucide-react';
 import { useSessionUser } from '../lib/hooks/useSessionUser';
 import { database } from '../lib/supabase';
@@ -18,6 +19,7 @@ const Navigation: React.FC<NavigationProps> = ({
   user, 
   onSignOut 
 }) => {
+  const navigate = useNavigate();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProductsHovered, setIsProductsHovered] = useState(false);
@@ -126,7 +128,7 @@ const Navigation: React.FC<NavigationProps> = ({
         <div className="flex items-center justify-between">
           {/* Logo */}
           <button 
-            onClick={() => setCurrentPage('home')}
+            onClick={() => navigate('/')}
             className="flex items-center group transition-all duration-300"
           >
             <img 
@@ -144,7 +146,7 @@ const Navigation: React.FC<NavigationProps> = ({
               onMouseLeave={() => handleProductsHover(false)}
             >
               <button
-                onClick={() => setCurrentPage('products')}
+                onClick={() => navigate('/products')}
                 className="flex items-center space-x-1 text-white hover:text-amber-400 transition-all duration-300 text-sm tracking-wider group-hover:scale-105"
               >
                 <span>Products</span>
@@ -194,7 +196,7 @@ const Navigation: React.FC<NavigationProps> = ({
                         <button
                           key={product.id}
                           onClick={() => {
-                            setCurrentPage('product');
+                            navigate('/product');
                             setIsProductsHovered(false);
                           }}
                           className={`w-full text-left px-6 py-4 text-white hover:text-amber-400 hover:bg-amber-400/10 rounded-lg transition-all duration-300 text-sm tracking-wide transform ${
@@ -227,7 +229,7 @@ const Navigation: React.FC<NavigationProps> = ({
                       <div className="border-t border-amber-400/20 mt-3 pt-3">
                         <button
                           onClick={() => {
-                            setCurrentPage('products');
+                            navigate('/products');
                             setIsProductsHovered(false);
                           }}
                           className="w-full text-center px-6 py-3 text-amber-400 hover:text-amber-300 hover:bg-amber-400/10 rounded-lg transition-all duration-300 text-sm tracking-wider font-medium"
@@ -244,7 +246,7 @@ const Navigation: React.FC<NavigationProps> = ({
                       <div className="text-amber-200 text-sm mb-2">No products available</div>
                       <button
                         onClick={() => {
-                          setCurrentPage('products');
+                          navigate('/products');
                           setIsProductsHovered(false);
                         }}
                         className="text-amber-400 hover:text-amber-300 text-xs underline"
@@ -311,8 +313,8 @@ const Navigation: React.FC<NavigationProps> = ({
                         key={item.name}
                         onClick={() => {
                           if (item.action) item.action();
-                          else if (item.name === 'My Orders') setCurrentPage('orders');
-                          else if (item.name === 'Account Settings') setCurrentPage('account-settings');
+                          else if (item.name === 'My Orders') navigate('/orders');
+                          else if (item.name === 'Account Settings') navigate('/account-settings');
                           else if (item.name === 'Help & Support') setCurrentPage('help');
                           else if (item.name === 'Support Tickets') setCurrentPage('support-tickets');
                           setIsUserDropdownOpen(false);
@@ -368,13 +370,13 @@ const Navigation: React.FC<NavigationProps> = ({
               /* Sign In/Up Buttons */
               <div className="flex items-center space-x-4">
                 <button 
-                  onClick={() => setCurrentPage('signin')}
+                  onClick={() => navigate('/signin')}
                   className="text-white hover:text-amber-400 transition-all duration-300 text-sm tracking-wider hover:scale-105"
                 >
                   Sign In
                 </button>
                 <button 
-                  onClick={() => setCurrentPage('signup')}
+                  onClick={() => navigate('/signup')}
                   className="px-4 py-2 bg-amber-400 hover:bg-amber-500 text-black font-medium text-sm tracking-wider rounded-lg transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl"
                 >
                   Sign Up
@@ -384,7 +386,7 @@ const Navigation: React.FC<NavigationProps> = ({
             
             {/* Wishlist Button */}
             <button 
-              onClick={() => setCurrentPage('wishlist')}
+              onClick={() => navigate('/wishlist')}
               className="relative group text-amber-400 hover:text-amber-300 transition-all duration-300 hover:scale-110"
               aria-label="View Wishlist"
             >
@@ -399,7 +401,7 @@ const Navigation: React.FC<NavigationProps> = ({
             
             {/* Cart Button with Animation */}
             <button 
-              onClick={() => setCurrentPage('cart')}
+              onClick={() => navigate('/cart')}
               className="relative group text-amber-400 hover:text-amber-300 transition-all duration-300 hover:scale-110"
               aria-label="View Cart"
             >
@@ -428,7 +430,7 @@ const Navigation: React.FC<NavigationProps> = ({
             <div className="flex flex-col space-y-4 mt-4">
               <button
                 onClick={() => {
-                  setCurrentPage('products');
+                  navigate('/products');
                   setIsMobileMenuOpen(false);
                 }}
                 className="text-amber-400 hover:text-amber-300 transition-colors text-left tracking-wider font-medium"
@@ -438,10 +440,7 @@ const Navigation: React.FC<NavigationProps> = ({
               
               <button className="text-amber-400 hover:text-amber-300 transition-colors flex items-center space-x-2 mt-4">
                 <button
-                  onClick={() => {
-                    setCurrentPage('cart');
-                    setIsMobileMenuOpen(false);
-                  }}
+                  onClick={() => navigate('/cart')}
                   className="flex items-center space-x-2 relative"
                   aria-label="View Cart"
                 >
@@ -458,7 +457,7 @@ const Navigation: React.FC<NavigationProps> = ({
               {/* Mobile Wishlist Button */}
               <button 
                 onClick={() => {
-                  setCurrentPage('wishlist');
+                  navigate('/wishlist');
                   setIsMobileMenuOpen(false);
                 }}
                 className="text-amber-400 hover:text-amber-300 transition-colors flex items-center space-x-2 mt-2"
@@ -480,7 +479,7 @@ const Navigation: React.FC<NavigationProps> = ({
                 <div className="flex flex-col space-y-2 mt-4 pt-4 border-t border-amber-400/20">
                   <button
                     onClick={() => {
-                      setCurrentPage('signin');
+                      navigate('/signin');
                       setIsMobileMenuOpen(false);
                     }}
                     className="text-white hover:text-amber-400 transition-colors text-left"
@@ -489,7 +488,7 @@ const Navigation: React.FC<NavigationProps> = ({
                   </button>
                   <button
                     onClick={() => {
-                      setCurrentPage('signup');
+                      navigate('/signup');
                       setIsMobileMenuOpen(false);
                     }}
                     className="text-amber-400 hover:text-amber-300 transition-colors text-left"
@@ -506,7 +505,7 @@ const Navigation: React.FC<NavigationProps> = ({
                   <div className="flex flex-col space-y-2 text-sm">
                     <button 
                       onClick={() => {
-                        setCurrentPage('orders');
+                        navigate('/orders');
                         setIsMobileMenuOpen(false);
                       }}
                       className="text-amber-200 hover:text-amber-400 transition-colors text-left"
@@ -515,7 +514,7 @@ const Navigation: React.FC<NavigationProps> = ({
                     </button>
                     <button 
                       onClick={() => {
-                        setCurrentPage('account-settings');
+                        navigate('/account-settings');
                         setIsMobileMenuOpen(false);
                       }}
                       className="text-amber-200 hover:text-amber-400 transition-colors text-left"
@@ -524,7 +523,7 @@ const Navigation: React.FC<NavigationProps> = ({
                     </button>
                     <button 
                       onClick={() => {
-                        setCurrentPage('wishlist');
+                        navigate('/wishlist');
                         setIsMobileMenuOpen(false);
                       }}
                       className="text-amber-200 hover:text-amber-400 transition-colors text-left"
@@ -533,7 +532,7 @@ const Navigation: React.FC<NavigationProps> = ({
                     </button>
                     <button 
                       onClick={() => {
-                        setCurrentPage('help');
+                        navigate('/help');
                         setIsMobileMenuOpen(false);
                       }}
                       className="text-amber-200 hover:text-amber-400 transition-colors text-left"
