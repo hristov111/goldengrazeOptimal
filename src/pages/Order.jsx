@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, User, Mail, Phone, MapPin, FileText, Loader2 } from 'lucide-react';
-import { isLoggedIn, getCurrentUser } from '../lib/auth.js';
-import { getOrderProfile } from '../lib/api.js';
+import { useAuth } from '../contexts/AuthContext';
+import { database } from '../lib/supabase';
 
 const US_STATES = [
   { value: '', label: 'Select State' },
@@ -60,6 +60,7 @@ const US_STATES = [
 
 const Order = () => {
   const navigate = useNavigate();
+  const { isLoggedIn, user, isLoading: authLoading } = useAuth();
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
   const [profileError, setProfileError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -78,10 +79,10 @@ const Order = () => {
 
   useEffect(() => {
     loadUserProfile();
-  }, []);
+  }, [isLoggedIn, user]);
 
   const loadUserProfile = async () => {
-    if (!isLoggedIn()) {
+    if (!isLoggedIn || !user) {
       return; // Not logged in, render empty form
     }
 
@@ -89,28 +90,48 @@ const Order = () => {
     setProfileError('');
 
     try {
-      // Get current user
-      const user = await getCurrentUser();
+      // Get user profile from Supabase
+      const { data: profile, error } = await database.getUserProfile(user.id);
       
-      // Get saved order profile
-      const profile = await getOrderProfile(user.id);
+      if (error) {
+        throw error;
+      }
       
-      // Prefill form with saved data
-      setFormData(prev => ({
-        ...prev,
-        fullName: profile.fullName || user.name || '',
-        email: profile.email || user.email || '',
-        phone: profile.phone || '',
-        street: profile.street || '',
-        apt: profile.apt || '',
-        city: profile.city || '',
-        state: profile.state || '',
-        zip: profile.zip || '',
-        notes: profile.notes || ''
-      }));
+      if (profile) {
+        // Extract shipping address from profile
+        const shippingAddress = profile.shipping_address || {};
+        
+        // Prefill form with saved data
+        setFormData(prev => ({
+          ...prev,
+          fullName: profile.full_name || user.name || '',
+          email: user.email || '',
+          phone: profile.phone || '',
+          street: shippingAddress.street || '',
+          apt: shippingAddress.apt || '',
+          city: shippingAddress.city || '',
+          state: shippingAddress.state || '',
+          zip: shippingAddress.zip || '',
+          notes: ''
+        }));
+      } else {
+        // No profile found, use basic user data
+        setFormData(prev => ({
+          ...prev,
+          fullName: user.name || '',
+          email: user.email || ''
+        }));
+      }
     } catch (error) {
       console.warn('Failed to load user profile:', error);
       setProfileError("We couldn't load your saved details. You can fill them in below.");
+      
+      // Still prefill with basic user data
+      setFormData(prev => ({
+        ...prev,
+        fullName: user.name || '',
+        email: user.email || ''
+      }));
     } finally {
       setIsLoadingProfile(false);
     }
@@ -203,7 +224,7 @@ const Order = () => {
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Order Form */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-2xl p-8 shadow-xl border border-amber-100">
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-amber-100">
               <h2 className="font-serif text-2xl text-stone-900 mb-6">Shipping Information</h2>
               
               {/* Loading State */}
