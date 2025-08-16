@@ -17,22 +17,7 @@ function dollars(cents: number) {
 }
 
 Deno.serve(async (req: Request) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, {
-      status: 200,
-      headers: corsHeaders,
-    });
-  }
-
-  if (req.method !== "POST") {
-    return new Response(JSON.stringify({ error: "Method not allowed" }), {
-      status: 405,
-      headers: { ...corsHeaders, "Content-Type": "application/json" }
-    });
-  }
-
-  try {
-    let body;
+    // Parse request body
     try {
       body = await req.json();
     } catch {
@@ -42,10 +27,10 @@ Deno.serve(async (req: Request) => {
       });
     }
 
+    // Get user ID from auth header or body
     const authHeader = req.headers.get("Authorization");
-    let userId = body?.userId || null;
+    userId = body?.userId || null;
     
-    // If no userId in body but we have auth header, try to get it from token
     if (!userId && authHeader?.startsWith("Bearer ")) {
       try {
         const supabaseAuth = createClient(
@@ -60,12 +45,31 @@ Deno.serve(async (req: Request) => {
       }
     }
 
+    // Initialize Supabase client
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Validate shipping data first
+    // Get the first available product from the database
+    const { data: product, error: productError } = await supabase
+      .from('products')
+      .select('id, name, price, image_url')
+      .eq('is_active', true)
+      .limit(1)
+      .single();
+    
+    if (productError || !product) {
+      return new Response(JSON.stringify({ 
+        error: "No active products available in the database",
+        details: productError?.message 
+      }), { 
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+
+    // Validate shipping data
     const s = body?.shipping ?? {};
     const missing = ["name","phone","address1","city","state","postal","country"]
       .filter((k) => !s[k]);
