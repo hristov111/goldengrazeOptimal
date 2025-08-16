@@ -325,10 +325,7 @@ const ProductPage: React.FC<ProductPageProps> = ({
               <BuyNowButton
                 productId={product.id}
                 productName={product.name}
-                onClick={() => {
-                  // TODO: Implement checkout flow
-                  console.log('Buy now clicked for:', product.name);
-                }}
+                onClick={() => navigate('/checkout')}
                 size="lg"
               />
               

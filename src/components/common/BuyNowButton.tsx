@@ -16,7 +16,7 @@ interface BuyNowButtonProps {
 const BuyNowButton: React.FC<BuyNowButtonProps> = ({
   productId,
   productName = 'product',
-  onClick = () => {},
+  onClick,
   className = '',
   size = 'md',
   variant = 'primary',

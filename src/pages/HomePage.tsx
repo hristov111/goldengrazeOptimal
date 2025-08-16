@@ -7,12 +7,14 @@ import IngredientTimeline from '../components/IngredientTimeline';
 import TestimonialCarousel from '../components/TestimonialCarousel';
 import FixedVideoPlayer from '../components/FixedVideoPlayer';
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 interface HomePageProps {
   // Remove setCurrentPage prop since we're using React Router
 }
 
 const HomePage: React.FC<HomePageProps> = () => {
+  const navigate = useNavigate();
   const [showFixedVideo, setShowFixedVideo] = useState(false);
 
   useEffect(() => {
@@ -146,7 +148,7 @@ const HomePage: React.FC<HomePageProps> = () => {
                 Join thousands who have discovered the power of ancestral skincare
               </p>
               <button 
-                onClick={() => window.location.href = '/order'}
+                onClick={() => navigate('/checkout')}
                 className="group px-8 py-4 bg-amber-400 hover:bg-amber-500 text-black font-medium tracking-widest transition-all duration-300 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 relative overflow-hidden"
               >
                 <span className="relative z-10 flex items-center justify-center space-x-2">
