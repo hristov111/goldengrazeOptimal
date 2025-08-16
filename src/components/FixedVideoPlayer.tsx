@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Volume2, VolumeX, X, Play } from 'lucide-react';
 
 interface FixedVideoPlayerProps {
