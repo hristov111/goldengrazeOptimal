@@ -1,11 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Play, Pause, Volume2, VolumeX, ArrowRight, Sparkles, Clock } from 'lucide-react';
 
 interface VideoShowcaseProps {
-  setCurrentPage?: (page: string) => void;
+  // Remove setCurrentPage prop since we're using React Router
 }
 
-const VideoShowcase: React.FC<VideoShowcaseProps> = ({ setCurrentPage }) => {
+const VideoShowcase: React.FC<VideoShowcaseProps> = () => {
+  const navigate = useNavigate();
   const [playingVideo, setPlayingVideo] = useState<number | null>(null);
   const [mutedVideos, setMutedVideos] = useState<boolean[]>([true, true, true]);
   const [pausedVideos, setPausedVideos] = useState<boolean[]>([false, false, false]);
@@ -269,11 +271,11 @@ const VideoShowcase: React.FC<VideoShowcaseProps> = ({ setCurrentPage }) => {
         }`}>
           <p className="text-stone-600 mb-6">Ready to begin your own ritual?</p>
           <button 
-            onClick={() => setCurrentPage && setCurrentPage('products')}
+            onClick={() => navigate('/order')}
             className="group px-8 py-4 bg-transparent border-2 border-amber-400 text-amber-700 hover:bg-amber-400 hover:text-white font-medium tracking-widest transition-all duration-300 rounded-lg"
           >
             <span className="flex items-center space-x-2">
-              <span>EXPLORE PRODUCTS</span>
+              <span>BUY NOW</span>
               <div className="w-2 h-2 bg-current rounded-full group-hover:scale-150 transition-transform duration-300"></div>
             </span>
           </button>

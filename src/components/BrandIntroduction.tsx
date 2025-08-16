@@ -1,11 +1,13 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Leaf, Droplets, Sparkles } from 'lucide-react';
 
 interface BrandIntroductionProps {
-  setCurrentPage?: (page: string) => void;
+  // Remove setCurrentPage prop since we're using React Router
 }
 
-const BrandIntroduction: React.FC<BrandIntroductionProps> = ({ setCurrentPage }) => {
+const BrandIntroduction: React.FC<BrandIntroductionProps> = () => {
+  const navigate = useNavigate();
   const [isVisible, setIsVisible] = useState(false);
   const [hoveredFeature, setHoveredFeature] = useState<number | null>(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -161,7 +163,7 @@ const BrandIntroduction: React.FC<BrandIntroductionProps> = ({ setCurrentPage })
             <div 
               className="aspect-square bg-gradient-to-br from-amber-100 via-stone-200 to-emerald-100 rounded-lg overflow-hidden shadow-2xl relative group cursor-pointer transform transition-all duration-500 hover:scale-105 hover:shadow-3xl md:mt-0"
               onMouseMove={handleMouseMove}
-             onClick={() => setCurrentPage && setCurrentPage('product')}
+             onClick={() => navigate('/order')}
             >
               <img 
                 src="/product_images/golden_graze1.png" 
@@ -188,11 +190,11 @@ const BrandIntroduction: React.FC<BrandIntroductionProps> = ({ setCurrentPage })
             {/* Shop Now Button under image */}
             <div className="mt-6 text-center max-w-md mx-auto">
               <button 
-                onClick={() => setCurrentPage && setCurrentPage('products')}
+                onClick={() => navigate('/order')}
                 className="group relative px-8 py-4 bg-amber-400 hover:bg-amber-500 text-white font-medium tracking-widest transition-all duration-300 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 overflow-hidden"
               >
                 <span className="relative z-10 flex items-center justify-center space-x-2">
-                  <span>SHOP NOW</span>
+                  <span>BUY NOW</span>
                   <div className="w-5 h-5 border-2 border-white rounded-full flex items-center justify-center group-hover:rotate-90 transition-transform duration-300">
                     <div className="w-2 h-2 bg-white rounded-full transform group-hover:scale-150 transition-transform duration-300"></div>
                   </div>

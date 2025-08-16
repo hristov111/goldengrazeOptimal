@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Star, Heart, ShoppingBag, Loader2 } from 'lucide-react';
 import { database } from '../lib/supabase';
 import { supabase } from '../lib/supabase';
@@ -24,10 +25,11 @@ interface Product {
 }
 
 interface ProductSpotlightProps {
-  setCurrentPage: (page: string) => void;
+  // Remove setCurrentPage prop since we're using React Router
 }
 
-const ProductSpotlight: React.FC<ProductSpotlightProps> = ({ setCurrentPage }) => {
+const ProductSpotlight: React.FC<ProductSpotlightProps> = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('texture');
   const [isVisible, setIsVisible] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -260,12 +262,12 @@ const ProductSpotlight: React.FC<ProductSpotlightProps> = ({ setCurrentPage }) =
 
   const handleAuthModalSignIn = () => {
     setShowAuthModal(false);
-    setCurrentPage('signin');
+    navigate('/signin');
   };
 
   const handleAuthModalSignUp = () => {
     setShowAuthModal(false);
-    setCurrentPage('signup');
+    navigate('/signup');
   };
 
   const formatPrice = (price: number) => {
@@ -410,7 +412,7 @@ const ProductSpotlight: React.FC<ProductSpotlightProps> = ({ setCurrentPage }) =
                 <BuyNowButton
                   productId={product.id}
                   productName={product.name}
-                  onClick={() => setCurrentPage('product')}
+                  onClick={() => navigate('/order')}
                   className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700"
                 />
                 
@@ -423,10 +425,10 @@ const ProductSpotlight: React.FC<ProductSpotlightProps> = ({ setCurrentPage }) =
                 />
                 
                 <button 
-                  onClick={() => setCurrentPage('product')}
+                  onClick={() => navigate('/order')}
                   className="w-full border-2 border-amber-400 text-amber-400 hover:bg-amber-400 hover:text-black py-3 px-6 tracking-widest transition-all duration-300 rounded-lg font-medium backdrop-blur-sm hover:backdrop-blur-md shadow-lg hover:shadow-xl transform hover:scale-105"
                 >
-                  VIEW PRODUCT DETAILS
+                  BUY NOW
                 </button>
               </div>
 

@@ -4,10 +4,10 @@ import { Volume2, VolumeX, X, Play } from 'lucide-react';
 interface FixedVideoPlayerProps {
   isVisible: boolean;
   onClose: () => void;
-  setCurrentPage?: (page: string) => void;
 }
 
-const FixedVideoPlayer: React.FC<FixedVideoPlayerProps> = ({ isVisible, onClose, setCurrentPage }) => {
+const FixedVideoPlayer: React.FC<FixedVideoPlayerProps> = ({ isVisible, onClose }) => {
+  const navigate = useNavigate();
   const [isMuted, setIsMuted] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [hasError, setHasError] = useState(false);
@@ -142,9 +142,7 @@ const FixedVideoPlayer: React.FC<FixedVideoPlayerProps> = ({ isVisible, onClose,
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                if (setCurrentPage) {
-                  setCurrentPage('product');
-                }
+                navigate('/order');
               }}
               className="px-4 py-2 bg-amber-400 hover:bg-amber-500 text-black font-medium text-sm tracking-wider rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
             >

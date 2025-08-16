@@ -1,10 +1,12 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 interface HeroSectionProps {
-  setCurrentPage?: (page: string) => void;
+  // Remove setCurrentPage prop since we're using React Router
 }
 
-const HeroSection: React.FC<HeroSectionProps> = ({ setCurrentPage }) => {
+const HeroSection: React.FC<HeroSectionProps> = () => {
+  const navigate = useNavigate();
   const [isVisible, setIsVisible] = useState(false);
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -136,10 +138,10 @@ const HeroSection: React.FC<HeroSectionProps> = ({ setCurrentPage }) => {
           </p>
           
           <button 
-            onClick={() => setCurrentPage && setCurrentPage('product')}
+            onClick={() => navigate('/order')}
             className="group relative px-6 sm:px-8 py-3 sm:py-4 border border-amber-400/50 text-amber-400 text-sm sm:text-base tracking-widest hover:border-amber-400 transition-all duration-300 hover:shadow-[0_0_20px_rgba(212,175,55,0.3)]"
           >
-            <span className="group-hover:text-amber-300 transition-colors">SHOP NOW</span>
+            <span className="group-hover:text-amber-300 transition-colors">BUY NOW</span>
             <div className="absolute inset-0 bg-amber-400/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
           </button>
         </div>

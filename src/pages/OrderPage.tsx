@@ -1,0 +1,416 @@
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ArrowLeft, Package, User, Mail, Phone, MapPin, FileText } from 'lucide-react';
+
+const OrderPage: React.FC = () => {
+  const navigate = useNavigate();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showThankYou, setShowThankYou] = useState(false);
+  const [formData, setFormData] = useState({
+    fullName: '',
+    email: '',
+    phone: '',
+    streetAddress: '',
+    apartment: '',
+    city: '',
+    state: '',
+    zipCode: '',
+    notes: ''
+  });
+
+  const usStates = [
+    { value: '', label: 'Select State' },
+    { value: 'AL', label: 'Alabama' },
+    { value: 'AK', label: 'Alaska' },
+    { value: 'AZ', label: 'Arizona' },
+    { value: 'AR', label: 'Arkansas' },
+    { value: 'CA', label: 'California' },
+    { value: 'CO', label: 'Colorado' },
+    { value: 'CT', label: 'Connecticut' },
+    { value: 'DE', label: 'Delaware' },
+    { value: 'FL', label: 'Florida' },
+    { value: 'GA', label: 'Georgia' },
+    { value: 'HI', label: 'Hawaii' },
+    { value: 'ID', label: 'Idaho' },
+    { value: 'IL', label: 'Illinois' },
+    { value: 'IN', label: 'Indiana' },
+    { value: 'IA', label: 'Iowa' },
+    { value: 'KS', label: 'Kansas' },
+    { value: 'KY', label: 'Kentucky' },
+    { value: 'LA', label: 'Louisiana' },
+    { value: 'ME', label: 'Maine' },
+    { value: 'MD', label: 'Maryland' },
+    { value: 'MA', label: 'Massachusetts' },
+    { value: 'MI', label: 'Michigan' },
+    { value: 'MN', label: 'Minnesota' },
+    { value: 'MS', label: 'Mississippi' },
+    { value: 'MO', label: 'Missouri' },
+    { value: 'MT', label: 'Montana' },
+    { value: 'NE', label: 'Nebraska' },
+    { value: 'NV', label: 'Nevada' },
+    { value: 'NH', label: 'New Hampshire' },
+    { value: 'NJ', label: 'New Jersey' },
+    { value: 'NM', label: 'New Mexico' },
+    { value: 'NY', label: 'New York' },
+    { value: 'NC', label: 'North Carolina' },
+    { value: 'ND', label: 'North Dakota' },
+    { value: 'OH', label: 'Ohio' },
+    { value: 'OK', label: 'Oklahoma' },
+    { value: 'OR', label: 'Oregon' },
+    { value: 'PA', label: 'Pennsylvania' },
+    { value: 'RI', label: 'Rhode Island' },
+    { value: 'SC', label: 'South Carolina' },
+    { value: 'SD', label: 'South Dakota' },
+    { value: 'TN', label: 'Tennessee' },
+    { value: 'TX', label: 'Texas' },
+    { value: 'UT', label: 'Utah' },
+    { value: 'VT', label: 'Vermont' },
+    { value: 'VA', label: 'Virginia' },
+    { value: 'WA', label: 'Washington' },
+    { value: 'WV', label: 'West Virginia' },
+    { value: 'WI', label: 'Wisconsin' },
+    { value: 'WY', label: 'Wyoming' }
+  ];
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    setIsSubmitting(true);
+    
+    // Simulate processing time
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    // Log order data to console
+    console.log('Order Data:', {
+      product: 'Golden Graze Whipped Tallow Balm',
+      price: 48.00,
+      customer: formData,
+      timestamp: new Date().toISOString()
+    });
+    
+    setIsSubmitting(false);
+    setShowThankYou(true);
+  };
+
+  if (showThankYou) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50/30 to-stone-100 flex items-center justify-center">
+        <div className="max-w-md mx-auto px-6 text-center">
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-2xl border border-amber-100">
+            <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Package size={32} className="text-white" />
+            </div>
+            
+            <h1 className="font-serif text-2xl text-stone-900 mb-4">Thank You!</h1>
+            <p className="text-stone-600 mb-6 leading-relaxed">
+              Thank you for your order! We'll confirm by email/SMS and send you tracking information once your Golden Graze Whipped Tallow Balm ships.
+            </p>
+            
+            <button
+              onClick={() => navigate('/')}
+              className="bg-amber-400 hover:bg-amber-500 text-white px-8 py-3 tracking-widest transition-all duration-300 rounded-lg font-medium transform hover:scale-105"
+            >
+              RETURN HOME
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50/30 to-stone-100 pt-20">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 opacity-5 pointer-events-none">
+        <div className="absolute top-32 left-16 w-32 h-32 bg-amber-400 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-32 right-20 w-24 h-24 bg-amber-300 rounded-full blur-2xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 left-1/3 w-16 h-16 bg-amber-500 rounded-full blur-xl animate-pulse delay-2000"></div>
+      </div>
+
+      <div className="max-w-4xl mx-auto px-6 py-8 relative z-10">
+        {/* Header */}
+        <button
+          onClick={() => navigate('/')}
+          className="flex items-center space-x-2 text-stone-600 hover:text-amber-600 transition-colors mb-8 group"
+        >
+          <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+          <span className="text-sm tracking-wider">Back to Home</span>
+        </button>
+
+        <div className="text-center mb-12">
+          <h1 className="font-serif text-4xl md:text-5xl text-stone-900 mb-4">Complete Your Order</h1>
+          <p className="text-stone-600 text-lg">
+            You're one step away from beginning your skincare ritual
+          </p>
+          <div className="w-24 h-0.5 bg-amber-400 mx-auto mt-6"></div>
+        </div>
+
+        <div className="grid lg:grid-cols-3 gap-8">
+          {/* Order Form */}
+          <div className="lg:col-span-2">
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-amber-100">
+              <h2 className="font-serif text-2xl text-stone-900 mb-6">Shipping Information</h2>
+              
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Full Name */}
+                <div>
+                  <label className="block text-stone-700 text-sm tracking-wider mb-2">
+                    FULL NAME *
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <User size={18} className="text-stone-400" />
+                    </div>
+                    <input
+                      type="text"
+                      name="fullName"
+                      value={formData.fullName}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full pl-10 pr-4 py-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-200 focus:border-amber-400 transition-colors"
+                      placeholder="Enter your full name"
+                    />
+                  </div>
+                </div>
+
+                {/* Email & Phone */}
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-stone-700 text-sm tracking-wider mb-2">
+                      EMAIL *
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Mail size={18} className="text-stone-400" />
+                      </div>
+                      <input
+                        type="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleInputChange}
+                        required
+                        className="w-full pl-10 pr-4 py-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-200 focus:border-amber-400 transition-colors"
+                        placeholder="your@email.com"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-stone-700 text-sm tracking-wider mb-2">
+                      PHONE NUMBER *
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Phone size={18} className="text-stone-400" />
+                      </div>
+                      <input
+                        type="tel"
+                        name="phone"
+                        value={formData.phone}
+                        onChange={handleInputChange}
+                        required
+                        className="w-full pl-10 pr-4 py-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-200 focus:border-amber-400 transition-colors"
+                        placeholder="(555) 123-4567"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Street Address */}
+                <div>
+                  <label className="block text-stone-700 text-sm tracking-wider mb-2">
+                    STREET ADDRESS *
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <MapPin size={18} className="text-stone-400" />
+                    </div>
+                    <input
+                      type="text"
+                      name="streetAddress"
+                      value={formData.streetAddress}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full pl-10 pr-4 py-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-200 focus:border-amber-400 transition-colors"
+                      placeholder="123 Main Street"
+                    />
+                  </div>
+                </div>
+
+                {/* Apartment/Suite */}
+                <div>
+                  <label className="block text-stone-700 text-sm tracking-wider mb-2">
+                    APARTMENT / SUITE
+                  </label>
+                  <input
+                    type="text"
+                    name="apartment"
+                    value={formData.apartment}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-200 focus:border-amber-400 transition-colors"
+                    placeholder="Apt 4B, Suite 200, etc. (optional)"
+                  />
+                </div>
+
+                {/* City, State, ZIP */}
+                <div className="grid md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-stone-700 text-sm tracking-wider mb-2">
+                      CITY *
+                    </label>
+                    <input
+                      type="text"
+                      name="city"
+                      value={formData.city}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-200 focus:border-amber-400 transition-colors"
+                      placeholder="City"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-stone-700 text-sm tracking-wider mb-2">
+                      STATE *
+                    </label>
+                    <select
+                      name="state"
+                      value={formData.state}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-200 focus:border-amber-400 transition-colors"
+                    >
+                      {usStates.map(state => (
+                        <option key={state.value} value={state.value}>
+                          {state.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-stone-700 text-sm tracking-wider mb-2">
+                      ZIP CODE *
+                    </label>
+                    <input
+                      type="text"
+                      name="zipCode"
+                      value={formData.zipCode}
+                      onChange={handleInputChange}
+                      required
+                      pattern="[0-9]{5}(-[0-9]{4})?"
+                      className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-200 focus:border-amber-400 transition-colors"
+                      placeholder="12345"
+                    />
+                  </div>
+                </div>
+
+                {/* Notes */}
+                <div>
+                  <label className="block text-stone-700 text-sm tracking-wider mb-2">
+                    ORDER NOTES
+                  </label>
+                  <div className="relative">
+                    <div className="absolute top-3 left-3 pointer-events-none">
+                      <FileText size={18} className="text-stone-400" />
+                    </div>
+                    <textarea
+                      name="notes"
+                      value={formData.notes}
+                      onChange={handleInputChange}
+                      rows={3}
+                      className="w-full pl-10 pr-4 py-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-200 focus:border-amber-400 transition-colors resize-vertical"
+                      placeholder="Special delivery instructions, gift message, etc. (optional)"
+                    />
+                  </div>
+                </div>
+
+                {/* Submit Button */}
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full bg-amber-400 hover:bg-amber-500 disabled:bg-amber-300 text-white py-4 px-6 tracking-widest transition-all duration-300 rounded-lg font-medium relative overflow-hidden group"
+                >
+                  {isSubmitting ? (
+                    <div className="flex items-center justify-center space-x-2">
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>PROCESSING ORDER...</span>
+                    </div>
+                  ) : (
+                    <span className="group-hover:scale-105 transition-transform duration-300">PLACE ORDER</span>
+                  )}
+                  
+                  {/* Shimmer effect */}
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 translate-x-[-100%] group-hover:translate-x-[200%] transition-transform duration-700"></div>
+                  </div>
+                </button>
+              </form>
+            </div>
+          </div>
+
+          {/* Order Summary */}
+          <div className="lg:col-span-1">
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-amber-100 sticky top-24">
+              <h3 className="font-serif text-xl text-stone-900 mb-6">Order Summary</h3>
+              
+              {/* Product */}
+              <div className="flex items-center space-x-4 mb-6 p-4 bg-stone-50 rounded-lg">
+                <div className="w-16 h-16 bg-gradient-to-br from-amber-100 to-amber-200 rounded-lg flex items-center justify-center">
+                  <img 
+                    src="/product_images/golden_graze1.png" 
+                    alt="Golden Graze Whipped Tallow Balm"
+                    className="w-full h-full object-cover rounded-lg"
+                    onError={(e) => {
+                      e.currentTarget.src = "/balm_images/firstPic.png";
+                    }}
+                  />
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-medium text-stone-900">Golden Graze Whipped Tallow Balm</h4>
+                  <p className="text-stone-600 text-sm">2oz jar</p>
+                  <p className="text-amber-600 text-sm">Unscented</p>
+                </div>
+              </div>
+
+              {/* Pricing */}
+              <div className="space-y-3 mb-6">
+                <div className="flex justify-between">
+                  <span className="text-stone-600">Subtotal</span>
+                  <span className="font-medium text-stone-900">$48.00</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-stone-600">Shipping</span>
+                  <span className="font-medium text-green-600">FREE</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-stone-600">Tax</span>
+                  <span className="font-medium text-stone-900">$3.84</span>
+                </div>
+                <div className="border-t border-stone-200 pt-3">
+                  <div className="flex justify-between">
+                    <span className="text-lg font-serif text-stone-900">Total</span>
+                    <span className="text-xl font-serif text-stone-900">$51.84</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Security Badge */}
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
+                <div className="text-green-600 text-sm font-medium mb-1">🔒 Secure Checkout</div>
+                <div className="text-green-700 text-xs">Your information is protected</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default OrderPage;

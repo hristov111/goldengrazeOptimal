@@ -9,10 +9,10 @@ import FixedVideoPlayer from '../components/FixedVideoPlayer';
 import { useState, useEffect } from 'react';
 
 interface HomePageProps {
-  setCurrentPage: (page: string) => void;
+  // Remove setCurrentPage prop since we're using React Router
 }
 
-const HomePage: React.FC<HomePageProps> = ({ setCurrentPage }) => {
+const HomePage: React.FC<HomePageProps> = () => {
   const [showFixedVideo, setShowFixedVideo] = useState(false);
 
   useEffect(() => {
@@ -21,22 +21,14 @@ const HomePage: React.FC<HomePageProps> = ({ setCurrentPage }) => {
       setShowFixedVideo(true);
     }, 2000); // Show after 2 seconds
 
-    // Listen for footer navigation events
-    const handleNavigateToPrivacy = () => setCurrentPage('privacy-policy');
-    const handleNavigateToTerms = () => setCurrentPage('terms-of-service');
-    
-    window.addEventListener('navigateToPrivacy', handleNavigateToPrivacy);
-    window.addEventListener('navigateToTerms', handleNavigateToTerms);
     return () => {
       clearTimeout(timer);
-      window.removeEventListener('navigateToPrivacy', handleNavigateToPrivacy);
-      window.removeEventListener('navigateToTerms', handleNavigateToTerms);
     };
   }, []);
 
   return (
     <div className="min-h-screen">
-      <HeroSection setCurrentPage={setCurrentPage} />
+      <HeroSection />
       
       {/* Before & After Image Gallery */}
       <section className="py-20 md:py-32 bg-gradient-to-br from-stone-900 via-black to-stone-800 relative overflow-hidden">
@@ -154,7 +146,7 @@ const HomePage: React.FC<HomePageProps> = ({ setCurrentPage }) => {
                 Join thousands who have discovered the power of ancestral skincare
               </p>
               <button 
-                onClick={() => setCurrentPage('products')}
+                onClick={() => window.location.href = '/order'}
                 className="group px-8 py-4 bg-amber-400 hover:bg-amber-500 text-black font-medium tracking-widest transition-all duration-300 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 relative overflow-hidden"
               >
                 <span className="relative z-10 flex items-center justify-center space-x-2">
@@ -172,9 +164,9 @@ const HomePage: React.FC<HomePageProps> = ({ setCurrentPage }) => {
         </div>
       </section>
       
-      <BrandIntroduction setCurrentPage={setCurrentPage} />
-      <ProductSpotlight setCurrentPage={setCurrentPage} />
-      <VideoShowcase setCurrentPage={setCurrentPage} />
+      <BrandIntroduction />
+      <ProductSpotlight />
+      <VideoShowcase />
       <IngredientTimeline />
       <TestimonialCarousel />
       
@@ -182,7 +174,6 @@ const HomePage: React.FC<HomePageProps> = ({ setCurrentPage }) => {
       <FixedVideoPlayer 
         isVisible={showFixedVideo}
         onClose={() => setShowFixedVideo(false)}
-        setCurrentPage={setCurrentPage}
       />
     </div>
   );
