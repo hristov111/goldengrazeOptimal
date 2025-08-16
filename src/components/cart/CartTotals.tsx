@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import Money from '../common/Money';
 import { useProductStock } from '../../lib/hooks/useProductStock';
 
@@ -16,6 +17,8 @@ interface CartTotalsProps {
 }
 
 const CartTotals: React.FC<CartTotalsProps> = ({ items, className = '' }) => {
+  const navigate = useNavigate();
+  
   // Check if any items are out of stock
   const hasOutOfStockItems = items.some(item => {
     const { isOutOfStock } = useProductStock(item.product.id);
@@ -77,11 +80,7 @@ const CartTotals: React.FC<CartTotalsProps> = ({ items, className = '' }) => {
         </div>
       ) : (
         <button 
-          onClick={() => {
-            // Navigate to checkout page
-            const event = new CustomEvent('navigateToCheckout');
-            window.dispatchEvent(event);
-          }}
+          onClick={() => navigate('/checkout')}
           className="w-full mt-6 bg-amber-400 hover:bg-amber-500 text-white py-4 px-6 tracking-widest transition-all duration-300 rounded-lg font-medium"
         >
           PROCEED TO CHECKOUT
