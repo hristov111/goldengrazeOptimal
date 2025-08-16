@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Star, Heart, ShoppingBag, ChevronLeft, ChevronRight, Leaf, Droplets, Sparkles } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { database } from '../lib/supabase';
@@ -21,6 +22,7 @@ const ProductPage: React.FC<ProductPageProps> = ({
   onSignIn = () => {}, 
   onSignUp = () => {} 
 }) => {
+  const navigate = useNavigate();
   const [product, setProduct] = useState<ProductWithImages | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -325,7 +327,7 @@ const ProductPage: React.FC<ProductPageProps> = ({
               <BuyNowButton
                 productId={product.id}
                 productName={product.name}
-                onClick={() => setCurrentPage('checkout')}
+                onClick={() => navigate('/checkout')}
                 size="lg"
               />
               
