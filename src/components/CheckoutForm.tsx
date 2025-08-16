@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from 'react-router-dom';
-import { User, Mail, Phone, MapPin, FileText, Loader2, CheckCircle } from 'lucide-react';
+import { User, Mail, Phone, MapPin, FileText, Loader2, CheckCircle, Package } from 'lucide-react';
 import { supabase } from "../lib/supabase";
+import { database } from "../lib/supabase";
 
 type Shipping = {
   name: string; 
@@ -73,6 +74,9 @@ const US_STATES = [
 export default function CheckoutForm() {
   const navigate = useNavigate();
   const [sessionUserId, setSessionUserId] = useState<string | null>(null);
+  const [product, setProduct] = useState<any>(null);
+  const [productImage, setProductImage] = useState<string>('');
+  const [loadingProduct, setLoadingProduct] = useState(true);
   const [shipping, setShipping] = useState<Shipping>({
     name: "", 
     email: "",
@@ -91,6 +95,59 @@ export default function CheckoutForm() {
   const [prefillLoading, setPrefillLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Fetch product data
+  useEffect(() => {
+    fetchProduct();
+  }, []);
+
+  const fetchProduct = async () => {
+    try {
+      setLoadingProduct(true);
+      
+      // Get the first active product
+      const { data: products, error } = await database.getProducts();
+      
+      if (error) {
+        throw error;
+      }
+      
+      if (products && products.length > 0) {
+        const firstProduct = products[0];
+        setProduct(firstProduct);
+        
+        // Fetch product image with minimal sort order
+        const { data: imageData, error: imageError } = await supabase
+          .from('product_images')
+          .select('public_url, storage_path')
+          .eq('product_id', firstProduct.id)
+          .order('sort_order', { ascending: true })
+          .limit(1)
+          .maybeSingle();
+        
+        if (!imageError && imageData) {
+          const imageUrl = imageData.public_url || imageData.storage_path;
+          setProductImage(imageUrl || '/product_images/golden_graze1.png');
+        } else {
+          setProductImage('/product_images/golden_graze1.png');
+        }
+      }
+    } catch (err: any) {
+      console.error('Failed to fetch product:', err);
+      // Use fallback data
+      setProduct({
+        id: 'fallback',
+        name: 'Golden Graze Whipped Tallow Balm',
+        price: 29.99,
+        category: 'balm',
+        scent: 'unscented',
+        size: '4oz'
+      });
+      setProductImage('/product_images/golden_graze1.png');
+    } finally {
+      setLoadingProduct(false);
+    }
+  };
 
   // Get session
   useEffect(() => {
@@ -254,9 +311,9 @@ export default function CheckoutForm() {
   }
 
   // Calculate totals for display
-  const subtotalCents = 2999 * quantity;
-  const shippingCents = 599;
-  const taxCents = Math.round(subtotalCents * 0.07);
+  const subtotalCents = product ? Math.round(product.price * 100) * quantity : 0;
+  const shippingCents = 0; // Free shipping
+  const taxCents = 0; // No tax
   const totalCents = subtotalCents + shippingCents + taxCents;
 
   if (result) {
@@ -355,25 +412,40 @@ export default function CheckoutForm() {
                 </div>
               </div>
 
-              {/* Email */}
-              <div>
-                <label className="block text-stone-700 text-sm tracking-wider mb-2">
-                  EMAIL ADDRESS *
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Mail size={18} className="text-stone-400" />
-                  </div>
-                  <input
-                    type="email"
+              {/* Product Loading */}
+              {loadingProduct ? (
+                <div className="flex items-center justify-center py-8 mb-6">
+                  <Loader2 size={24} className="text-amber-400 animate-spin" />
                     value={shipping.email}
-                    onChange={(e) => update("email", e.target.value)}
-                    required
-                    className="w-full pl-10 pr-4 py-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-200 focus:border-amber-400 transition-colors"
-                    placeholder="your@email.com"
-                  />
+              ) : (
+                /* Product */
+                <div className="flex items-center space-x-4 mb-6 p-4 bg-stone-50 rounded-lg">
+                  <div className="w-16 h-16 bg-gradient-to-br from-amber-100 to-amber-200 rounded-lg flex items-center justify-center">
+                    {productImage ? (
+                      <img 
+                        src={productImage}
+                        alt={product?.name || 'Product'}
+                        className="w-full h-full object-cover rounded-lg"
+                        onError={(e) => {
+                          if (e.currentTarget.src.includes('golden_graze1.png')) {
+                            e.currentTarget.src = "/balm_images/firstPic.png";
+                          } else if (e.currentTarget.src.includes('firstPic.png')) {
+                            e.currentTarget.src = "/balm_images/Golder Graze.png";
+                          }
+                        }}
+                      />
+                    ) : (
+                      <Package size={24} className="text-amber-600" />
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-medium text-stone-900">{product?.name || 'Golden Graze Whipped Tallow Balm'}</h4>
+                    <p className="text-stone-600 text-sm">{product?.size || '4oz jar'}</p>
+                    <p className="text-amber-600 text-sm">{product?.scent && product.scent !== 'unscented' ? product.scent : 'Unscented'}</p>
+                    <p className="text-stone-600 text-sm">Qty: {quantity}</p>
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Phone & Quantity */}
               <div className="grid md:grid-cols-2 gap-4">
@@ -383,12 +455,8 @@ export default function CheckoutForm() {
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Phone size={18} className="text-stone-400" />
+                  <span className="font-medium text-green-600">FREE</span>
                     </div>
-                    <input
-                      type="tel"
-                      value={shipping.phone}
-                      onChange={(e) => update("phone", e.target.value)}
                       required
                       className="w-full pl-10 pr-4 py-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-200 focus:border-amber-400 transition-colors"
                       placeholder="(555) 123-4567"
