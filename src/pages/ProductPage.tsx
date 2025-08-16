@@ -11,17 +11,7 @@ import AddToCartButton from '../components/common/AddToCartButton';
 import StockIndicator from '../components/common/StockIndicator';
 import QuantitySelector from '../components/common/QuantitySelector';
 
-interface ProductPageProps {
-  setCurrentPage: (page: string) => void;
-  onSignIn?: () => void;
-  onSignUp?: () => void;
-}
-
-const ProductPage: React.FC<ProductPageProps> = ({ 
-  setCurrentPage, 
-  onSignIn = () => {}, 
-  onSignUp = () => {} 
-}) => {
+const ProductPage: React.FC = () => {
   const navigate = useNavigate();
   const [product, setProduct] = useState<ProductWithImages | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -210,14 +200,12 @@ const ProductPage: React.FC<ProductPageProps> = ({
 
   const handleAuthModalSignIn = () => {
     setShowAuthModal(false);
-    onSignIn();
-    setCurrentPage('signin');
+    navigate('/signin');
   };
 
   const handleAuthModalSignUp = () => {
     setShowAuthModal(false);
-    onSignUp();
-    setCurrentPage('signup');
+    navigate('/signup');
   };
 
   // Loading state
@@ -247,7 +235,7 @@ const ProductPage: React.FC<ProductPageProps> = ({
               <h3 className="font-serif text-xl text-stone-900 mb-2">Product Not Found</h3>
               <p className="text-stone-600 mb-6">{error || 'The requested product could not be found.'}</p>
               <button
-                onClick={() => setCurrentPage('products')}
+                onClick={() => navigate('/products')}
                 className="bg-amber-400 hover:bg-amber-500 text-white px-6 py-3 tracking-widest transition-colors rounded-lg"
               >
                 VIEW ALL PRODUCTS
@@ -264,7 +252,7 @@ const ProductPage: React.FC<ProductPageProps> = ({
       {/* Breadcrumb */}
       <div className="max-w-7xl mx-auto px-6 py-6">
         <button
-          onClick={() => setCurrentPage('products')}
+          onClick={() => navigate('/products')}
           className="flex items-center space-x-2 text-stone-600 hover:text-amber-600 transition-colors"
         >
           <ArrowLeft size={16} />

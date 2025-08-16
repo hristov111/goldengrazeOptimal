@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Search, ChevronDown, ChevronUp } from 'lucide-react';
 
-interface HelpFaqPageProps {
-  setCurrentPage: (page: string) => void;
-}
-
-const HelpFaqPage: React.FC<HelpFaqPageProps> = ({ setCurrentPage }) => {
+const HelpFaqPage: React.FC = () => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [expandedItems, setExpandedItems] = useState<number[]>([]);
@@ -112,7 +110,7 @@ const HelpFaqPage: React.FC<HelpFaqPageProps> = ({ setCurrentPage }) => {
         {/* Header */}
         <div className="mb-8">
           <button
-            onClick={() => setCurrentPage('help')}
+            onClick={() => navigate('/help')}
             className="flex items-center space-x-2 text-stone-600 hover:text-amber-600 transition-colors mb-6 group"
           >
             <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
@@ -211,13 +209,13 @@ const HelpFaqPage: React.FC<HelpFaqPageProps> = ({ setCurrentPage }) => {
               Can't find what you're looking for? Our support team is here to help.
             </p>
             <button
-              onClick={() => setCurrentPage('help-contact')}
+              onClick={() => navigate('/help-contact')}
               className="bg-amber-400 hover:bg-amber-500 text-white px-8 py-4 tracking-widest transition-all duration-300 rounded-lg font-medium transform hover:scale-105"
             >
               CONTACT SUPPORT
             </button>
           </div>
-        </div>
+              onClick={() => navigate('/help-faq')}
       </div>
     </div>
   );

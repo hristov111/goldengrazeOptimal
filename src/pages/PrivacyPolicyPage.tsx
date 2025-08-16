@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 
-interface PrivacyPolicyPageProps {
-  setCurrentPage: (page: string) => void;
-}
-
-const PrivacyPolicyPage: React.FC<PrivacyPolicyPageProps> = ({ setCurrentPage }) => {
+const PrivacyPolicyPage: React.FC = () => {
+  const navigate = useNavigate();
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -28,7 +26,7 @@ const PrivacyPolicyPage: React.FC<PrivacyPolicyPageProps> = ({ setCurrentPage })
           isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
         }`}>
           <button
-            onClick={() => setCurrentPage('home')}
+            onClick={() => navigate('/')}
             className="flex items-center space-x-2 text-stone-600 hover:text-amber-600 transition-colors mb-8 group"
           >
             <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
@@ -125,7 +123,7 @@ const PrivacyPolicyPage: React.FC<PrivacyPolicyPageProps> = ({ setCurrentPage })
           </ul>
 
           <button
-            onClick={() => setCurrentPage('home')}
+            onClick={() => navigate('/')}
             className="bg-amber-400 hover:bg-amber-500 text-white px-8 py-4 tracking-widest transition-all duration-300 rounded-lg font-medium transform hover:scale-105"
           >
             BACK TO HOME

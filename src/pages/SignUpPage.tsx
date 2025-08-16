@@ -28,11 +28,7 @@ const getPasswordStrength = (password: string) => {
   return { score, strength, feedback };
 };
 
-interface SignUpPageProps {
-  setCurrentPage?: (page: string) => void;
-}
-
-const SignUpPage: React.FC<SignUpPageProps> = ({ setCurrentPage }) => {
+const SignUpPage: React.FC = () => {
   const navigate = useNavigate();
   const { signUp } = useAuth();
   const [formData, setFormData] = useState({
@@ -351,7 +347,7 @@ const SignUpPage: React.FC<SignUpPageProps> = ({ setCurrentPage }) => {
           <div className="text-center mt-8 pt-6 border-t border-stone-200">
             <p className="text-stone-600 mb-3">Already have an account?</p>
             <button
-              onClick={() => setCurrentPage('signin')}
+              onClick={() => navigate('/signin')}
               className="text-amber-600 hover:text-amber-700 font-medium tracking-wider transition-colors hover:scale-105 transform duration-300"
             >
               SIGN IN

@@ -1,25 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { ShoppingBag, Menu, X, ChevronDown, Heart } from 'lucide-react';
 import { useSessionUser } from '../lib/hooks/useSessionUser';
 import { database } from '../lib/supabase';
 
 interface NavigationProps {
-  currentPage: string;
-  setCurrentPage: (page: string) => void;
   isLoggedIn: boolean;
   user: {name: string; email: string; id: string} | null;
   onSignOut: () => void;
 }
 
 const Navigation: React.FC<NavigationProps> = ({ 
-  currentPage, 
-  setCurrentPage, 
   isLoggedIn, 
   user, 
   onSignOut 
 }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProductsHovered, setIsProductsHovered] = useState(false);
@@ -305,9 +302,9 @@ const Navigation: React.FC<NavigationProps> = ({
                     {[
                       { name: 'My Orders', icon: '📦' },
                       { name: 'Account Settings', icon: '⚙️' },
-                      { name: 'Wishlist', icon: '❤️', action: () => setCurrentPage('wishlist') },
-                      { name: 'Help & Support', icon: '💬', action: () => setCurrentPage('help') },
-                      { name: 'Support Tickets', icon: '🎫', action: () => setCurrentPage('support-tickets') }
+                      { name: 'Wishlist', icon: '❤️', action: () => navigate('/wishlist') },
+                      { name: 'Help & Support', icon: '💬', action: () => navigate('/help') },
+                      { name: 'Support Tickets', icon: '🎫', action: () => navigate('/support-tickets') }
                     ].map((item, index) => (
                       <button
                         key={item.name}
@@ -315,8 +312,8 @@ const Navigation: React.FC<NavigationProps> = ({
                           if (item.action) item.action();
                           else if (item.name === 'My Orders') navigate('/orders');
                           else if (item.name === 'Account Settings') navigate('/account-settings');
-                          else if (item.name === 'Help & Support') setCurrentPage('help');
-                          else if (item.name === 'Support Tickets') setCurrentPage('support-tickets');
+                          else if (item.name === 'Help & Support') navigate('/help');
+                          else if (item.name === 'Support Tickets') navigate('/support-tickets');
                           setIsUserDropdownOpen(false);
                         }}
                         className={`w-full text-left px-4 py-3 text-white hover:text-amber-400 hover:bg-amber-400/10 rounded-lg transition-all duration-300 text-sm tracking-wide transform ${

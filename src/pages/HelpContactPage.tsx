@@ -1,16 +1,15 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Mail, Phone, Clock, MessageCircle } from 'lucide-react';
 import { ToastProvider } from '../contexts/ToastContext';
 import ContactForm from '../components/support/ContactForm';
 
-interface HelpContactPageProps {
-  setCurrentPage: (page: string) => void;
-}
-
-const HelpContactPageContent: React.FC<HelpContactPageProps> = ({ setCurrentPage }) => {
+const HelpContactPageContent: React.FC = () => {
+  const navigate = useNavigate();
+  
   const handleContactSuccess = (ticketId: string) => {
     // Navigate to support tickets page
-    setCurrentPage('support-tickets');
+    navigate('/support-tickets');
   };
 
   return (
@@ -26,7 +25,7 @@ const HelpContactPageContent: React.FC<HelpContactPageProps> = ({ setCurrentPage
         {/* Header */}
         <div className="mb-8">
           <button
-            onClick={() => setCurrentPage('help')}
+            onClick={() => navigate('/help')}
             className="flex items-center space-x-2 text-stone-600 hover:text-amber-600 transition-colors mb-6 group"
           >
             <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
@@ -118,7 +117,7 @@ const HelpContactPageContent: React.FC<HelpContactPageProps> = ({ setCurrentPage
                 Looking for immediate help? Check our FAQ for instant answers to common questions.
               </p>
               <button
-                onClick={() => setCurrentPage('help-faq')}
+                onClick={() => navigate('/help-faq')}
                 className="text-amber-600 hover:text-amber-700 font-medium text-sm transition-colors"
               >
                 Browse FAQ →
@@ -131,10 +130,10 @@ const HelpContactPageContent: React.FC<HelpContactPageProps> = ({ setCurrentPage
   );
 };
 
-const HelpContactPage: React.FC<HelpContactPageProps> = (props) => {
+const HelpContactPage: React.FC = () => {
   return (
     <ToastProvider>
-      <HelpContactPageContent {...props} />
+      <HelpContactPageContent />
     </ToastProvider>
   );
 };

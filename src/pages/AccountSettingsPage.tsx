@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Settings, ExternalLink } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { ToastProvider } from '../contexts/ToastContext';
@@ -6,18 +7,15 @@ import ProfileForm from '../components/settings/ProfileForm';
 import EmailForm from '../components/settings/EmailForm';
 import PasswordForm from '../components/settings/PasswordForm';
 
-interface AccountSettingsPageProps {
-  setCurrentPage: (page: string) => void;
-}
-
-const AccountSettingsPageContent: React.FC<AccountSettingsPageProps> = ({ setCurrentPage }) => {
+const AccountSettingsPageContent: React.FC = () => {
+  const navigate = useNavigate();
   const [isVisible, setIsVisible] = useState(false);
   const { isLoggedIn, user, isLoading } = useAuth();
 
   useEffect(() => {
     // Redirect if not logged in
     if (!isLoading && !isLoggedIn) {
-      setCurrentPage('signin');
+      navigate('/signin');
       return;
     }
 
@@ -26,7 +24,7 @@ const AccountSettingsPageContent: React.FC<AccountSettingsPageProps> = ({ setCur
       // Scroll to top when page loads
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-  }, [isLoggedIn, isLoading, setCurrentPage]);
+  }, [isLoggedIn, isLoading, navigate]);
 
   // Show loading state while checking authentication
   if (isLoading) {
@@ -62,7 +60,7 @@ const AccountSettingsPageContent: React.FC<AccountSettingsPageProps> = ({ setCur
           isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
         }`}>
           <button
-            onClick={() => setCurrentPage('home')}
+            onClick={() => navigate('/')}
             className="flex items-center space-x-2 text-stone-600 hover:text-amber-600 transition-colors mb-8 group"
           >
             <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
@@ -113,7 +111,6 @@ const AccountSettingsPageContent: React.FC<AccountSettingsPageProps> = ({ setCur
             <div className="space-y-3">
               <button
                 onClick={() => {
-                  // TODO: Implement sessions & security page
                   alert('Sessions & Security page coming soon!');
                 }}
                 className="flex items-center justify-between w-full p-3 text-left hover:bg-stone-50 rounded-lg transition-colors group"
@@ -126,7 +123,7 @@ const AccountSettingsPageContent: React.FC<AccountSettingsPageProps> = ({ setCur
               </button>
               
               <button
-                onClick={() => setCurrentPage('home')}
+                onClick={() => navigate('/orders')}
                 className="flex items-center justify-between w-full p-3 text-left hover:bg-stone-50 rounded-lg transition-colors group"
               >
                 <div>
@@ -143,10 +140,10 @@ const AccountSettingsPageContent: React.FC<AccountSettingsPageProps> = ({ setCur
   );
 };
 
-const AccountSettingsPage: React.FC<AccountSettingsPageProps> = (props) => {
+const AccountSettingsPage: React.FC = () => {
   return (
     <ToastProvider>
-      <AccountSettingsPageContent {...props} />
+      <AccountSettingsPageContent />
     </ToastProvider>
   );
 };

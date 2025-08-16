@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Search, MessageCircle, FileText, Phone, Mail, ArrowRight } from 'lucide-react';
 
-interface HelpPageProps {
-  setCurrentPage: (page: string) => void;
-}
-
-const HelpPage: React.FC<HelpPageProps> = ({ setCurrentPage }) => {
+const HelpPage: React.FC = () => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
 
   const quickLinks = [
@@ -13,26 +11,26 @@ const HelpPage: React.FC<HelpPageProps> = ({ setCurrentPage }) => {
       title: 'Order Status',
       description: 'Track your Golden Graze orders',
       icon: FileText,
-      action: () => setCurrentPage('orders')
+      action: () => navigate('/orders')
     },
     {
       title: 'Product Information',
       description: 'Learn about our tallow balms',
       icon: MessageCircle,
-      action: () => setCurrentPage('help-faq')
+      action: () => navigate('/help-faq')
     },
     {
       title: 'Contact Support',
       description: 'Get help from our team',
       icon: Mail,
-      action: () => setCurrentPage('help-contact')
+      action: () => navigate('/help-contact')
     }
   ];
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      setCurrentPage('help-faq');
+      navigate('/help-faq');
     }
   };
 
@@ -120,7 +118,7 @@ const HelpPage: React.FC<HelpPageProps> = ({ setCurrentPage }) => {
             ].map((topic, index) => (
               <button
                 key={index}
-                onClick={() => setCurrentPage('help-faq')}
+                onClick={() => navigate('/help-faq')}
                 className="text-left p-4 rounded-lg hover:bg-amber-50 transition-colors group"
               >
                 <div className="flex items-center justify-between">
@@ -142,13 +140,13 @@ const HelpPage: React.FC<HelpPageProps> = ({ setCurrentPage }) => {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
-              onClick={() => setCurrentPage('help-contact')}
+              onClick={() => navigate('/help-contact')}
               className="bg-amber-400 hover:bg-amber-500 text-white px-8 py-4 tracking-widest transition-all duration-300 rounded-lg font-medium transform hover:scale-105"
             >
               CONTACT SUPPORT
             </button>
             <button
-              onClick={() => setCurrentPage('help-faq')}
+              onClick={() => navigate('/help-faq')}
               className="border-2 border-amber-400 text-amber-700 hover:bg-amber-50 px-8 py-4 tracking-widest transition-all duration-300 rounded-lg font-medium"
             >
               VIEW FAQ

@@ -1,25 +1,23 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Heart } from 'lucide-react';
 import { useSessionUser } from '../lib/hooks/useSessionUser';
 import WishlistGrid from '../components/wishlist/WishlistGrid';
 
-interface WishlistPageProps {
-  setCurrentPage: (page: string) => void;
-}
-
-const WishlistPage: React.FC<WishlistPageProps> = ({ setCurrentPage }) => {
+const WishlistPage: React.FC = () => {
+  const navigate = useNavigate();
   const [isVisible, setIsVisible] = useState(false);
   const [wishlistItems, setWishlistItems] = useState<any[]>([]);
   const { user, loading } = useSessionUser();
 
   useEffect(() => {
     const handleNavigateToProducts = () => {
-      setCurrentPage('products');
+      navigate('/products');
     };
 
     window.addEventListener('navigateToProducts', handleNavigateToProducts);
     return () => window.removeEventListener('navigateToProducts', handleNavigateToProducts);
-  }, [setCurrentPage]);
+  }, [navigate]);
 
   useEffect(() => {
     setIsVisible(true);
@@ -29,7 +27,7 @@ const WishlistPage: React.FC<WishlistPageProps> = ({ setCurrentPage }) => {
 
   // Redirect to sign in if not authenticated
   if (!loading && !user) {
-    setCurrentPage('signin');
+    navigate('/signin');
     return null;
   }
 
@@ -48,7 +46,7 @@ const WishlistPage: React.FC<WishlistPageProps> = ({ setCurrentPage }) => {
           isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
         }`}>
           <button
-            onClick={() => setCurrentPage('home')}
+            onClick={() => navigate('/')}
             className="flex items-center space-x-2 text-stone-600 hover:text-amber-600 transition-colors mb-8 group"
           >
             <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
@@ -85,7 +83,7 @@ const WishlistPage: React.FC<WishlistPageProps> = ({ setCurrentPage }) => {
             {wishlistItems.length > 0 && (
               <div className="text-center mt-12">
                 <button
-                  onClick={() => setCurrentPage('products')}
+                  onClick={() => navigate('/products')}
                   className="group relative px-8 py-4 bg-transparent border-2 border-amber-400 text-amber-700 hover:bg-amber-400 hover:text-white font-medium tracking-widest transition-all duration-300 rounded-lg"
                 >
                   <span className="flex items-center space-x-2">

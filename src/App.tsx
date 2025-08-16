@@ -27,15 +27,12 @@ import TermsOfServicePage from './pages/TermsOfServicePage';
 // App content component that has access to auth context
 const AppContent: React.FC = () => {
   const { isLoggedIn, user, signOut } = useAuth();
-  const [currentPage, setCurrentPage] = useState('home');
   const [selectedOrder, setSelectedOrder] = useState<string>('');
   const [selectedTicket, setSelectedTicket] = useState<string>('');
 
   return (
     <div className="min-h-screen bg-white">
       <Navigation
-        currentPage={currentPage}
-        setCurrentPage={setCurrentPage}
         isLoggedIn={isLoggedIn}
         user={user}
         onSignOut={signOut}

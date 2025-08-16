@@ -3,11 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
-interface SignInPageProps {
-  setCurrentPage?: (page: string) => void;
-}
-
-const SignInPage: React.FC<SignInPageProps> = ({ setCurrentPage }) => {
+const SignInPage: React.FC = () => {
   const navigate = useNavigate();
   const { signIn } = useAuth();
   const [formData, setFormData] = useState({

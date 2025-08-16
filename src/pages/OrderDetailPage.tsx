@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Package, ExternalLink, CreditCard, Loader2, AlertCircle, MapPin, Phone, User } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { database } from '../lib/supabase';
@@ -6,12 +7,9 @@ import OrderStatusBadge from '../components/orders/OrderStatusBadge';
 import Timeline from '../components/orders/Timeline';
 import Money from '../components/orders/Money';
 
-interface OrderDetailPageProps {
-  setCurrentPage: (page: string) => void;
-  orderNumber: string;
-}
-
-const OrderDetailPage: React.FC<OrderDetailPageProps> = ({ setCurrentPage, orderNumber }) => {
+const OrderDetailPage: React.FC = () => {
+  const navigate = useNavigate();
+  const { orderNumber } = useParams<{ orderNumber: string }>();
   const [order, setOrder] = useState<any>(null);
   const [items, setItems] = useState<any[]>([]);
   const [events, setEvents] = useState<any[]>([]);
@@ -24,7 +22,7 @@ const OrderDetailPage: React.FC<OrderDetailPageProps> = ({ setCurrentPage, order
   useEffect(() => {
     // Redirect if not logged in
     if (!authLoading && !isLoggedIn) {
-      setCurrentPage('signin');
+      navigate('/signin');
       return;
     }
 
@@ -34,7 +32,7 @@ const OrderDetailPage: React.FC<OrderDetailPageProps> = ({ setCurrentPage, order
       // Scroll to top when page loads
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-  }, [isLoggedIn, user, authLoading, orderNumber, setCurrentPage]);
+  }, [isLoggedIn, user, authLoading, orderNumber, navigate]);
 
   const loadOrderDetails = async () => {
     if (!orderNumber) return;
@@ -149,7 +147,7 @@ const OrderDetailPage: React.FC<OrderDetailPageProps> = ({ setCurrentPage, order
           isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
         }`}>
           <button
-            onClick={() => setCurrentPage('orders')}
+            onClick={() => navigate('/orders')}
             className="flex items-center space-x-2 text-stone-600 hover:text-amber-600 transition-colors mb-8 group"
           >
             <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
