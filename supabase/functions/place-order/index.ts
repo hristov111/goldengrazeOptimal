@@ -1,5 +1,16 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 
+// Check environment variables at startup
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+  console.error("Missing required environment variables:", {
+    SUPABASE_URL: !!SUPABASE_URL,
+    SUPABASE_SERVICE_ROLE_KEY: !!SUPABASE_SERVICE_ROLE_KEY
+  });
+}
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
@@ -54,6 +65,17 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
+    // Check environment variables first
+    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+      return new Response(JSON.stringify({ 
+        error: "Edge Function configuration error",
+        details: "Missing Supabase environment variables. Please check your Supabase project settings."
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+
     if (!body) {
       return new Response(JSON.stringify({ error: "Request body is required" }), {
         status: 400,
@@ -80,10 +102,18 @@ Deno.serve(async (req: Request) => {
     }
 
     // Initialize Supabase client
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
+    let supabase;
+    try {
+      supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    } catch (clientError) {
+      return new Response(JSON.stringify({ 
+        error: "Failed to initialize Supabase client",
+        details: clientError.message 
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
 
     // Get the first available product from the database
     const { data: product, error: productError } = await supabase

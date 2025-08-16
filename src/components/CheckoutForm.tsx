@@ -186,7 +186,15 @@ export default function CheckoutForm() {
       
       if (invokeError) {
         console.error('Order API Error:', invokeError);
-        throw new Error(invokeError.message || 'Order failed');
+        
+        // Handle specific Supabase function errors
+        if (invokeError.message?.includes('Failed to send a request')) {
+          throw new Error('Unable to connect to order service. Please check your internet connection and try again.');
+        } else if (invokeError.message?.includes('configuration error')) {
+          throw new Error('Service temporarily unavailable. Please try again later or contact support.');
+        } else {
+          throw new Error(invokeError.message || 'Order failed. Please try again.');
+        }
       }
       
       setResult(result);
