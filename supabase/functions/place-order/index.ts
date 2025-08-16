@@ -1,16 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 
-// Check environment variables at startup
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-
-if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-  console.error("Missing required environment variables:", {
-    SUPABASE_URL: !!SUPABASE_URL,
-    SUPABASE_SERVICE_ROLE_KEY: !!SUPABASE_SERVICE_ROLE_KEY
-  });
-}
-
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
@@ -42,19 +31,6 @@ Deno.serve(async (req: Request) => {
   }
 
   let body: any = null;
-  // Handle CORS preflight
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { status: 204, headers: corsHeaders });
-  }
-  
-  // Only allow POST requests
-  if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: "Method not allowed" }), {
-      status: 405,
-      headers: { ...corsHeaders, "Content-Type": "application/json" }
-    });
-  }
-
   try {
     body = await req.json();
   } catch {
@@ -65,11 +41,34 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    // Check environment variables first
+    // Check environment variables
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
     if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+      console.error("Missing environment variables:", {
+        SUPABASE_URL: !!SUPABASE_URL,
+        SUPABASE_SERVICE_ROLE_KEY: !!SUPABASE_SERVICE_ROLE_KEY
+      });
+      
       return new Response(JSON.stringify({ 
         error: "Edge Function configuration error",
-        details: "Missing Supabase environment variables. Please check your Supabase project settings."
+        details: "Missing Supabase environment variables. Please check your Supabase project settings and redeploy the function."
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+
+    // Initialize Supabase client
+    let supabase;
+    try {
+      supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    } catch (clientError) {
+      console.error("Failed to create Supabase client:", clientError);
+      return new Response(JSON.stringify({ 
+        error: "Failed to initialize database connection",
+        details: "Unable to connect to Supabase. Please try again later."
       }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -83,37 +82,8 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    // Get user ID from auth header or body
-    const authHeader = req.headers.get("Authorization");
-    let userId = body?.userId || null;
-    
-    if (!userId && authHeader?.startsWith("Bearer ")) {
-      try {
-        const supabaseAuth = createClient(
-          Deno.env.get("SUPABASE_URL")!,
-          Deno.env.get("SUPABASE_ANON_KEY")!
-        );
-        
-        const { data: { user } } = await supabaseAuth.auth.getUser(authHeader.substring(7));
-        userId = user?.id || null;
-      } catch {
-        // If token is invalid, continue with null userId (guest checkout)
-      }
-    }
-
-    // Initialize Supabase client
-    let supabase;
-    try {
-      supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-    } catch (clientError) {
-      return new Response(JSON.stringify({ 
-        error: "Failed to initialize Supabase client",
-        details: clientError.message 
-      }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
-      });
-    }
+    // Get user ID from body (passed from frontend)
+    const userId = body?.userId || null;
 
     // Get the first available product from the database
     const { data: product, error: productError } = await supabase
@@ -124,16 +94,17 @@ Deno.serve(async (req: Request) => {
       .single();
     
     if (productError || !product) {
+      console.error("Product fetch error:", productError);
       return new Response(JSON.stringify({ 
-        error: "No active products available in the database",
-        details: productError?.message 
+        error: "No active products available",
+        details: productError?.message || "Unable to find products in database"
       }), { 
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
 
-    // Validate shipping data
+    // Validate and normalize shipping data
     const s = body?.shipping ?? {};
     const clean = (v: unknown) => String(v ?? '').trim();
     s.name = clean(s.name);
@@ -161,7 +132,8 @@ Deno.serve(async (req: Request) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
-    if ((s.country || "").toUpperCase() !== "US") {
+    
+    if (s.country !== "US") {
       return new Response(JSON.stringify({ error: "Only US shipping is currently supported" }), { 
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -179,36 +151,58 @@ Deno.serve(async (req: Request) => {
 
     const qty = Math.max(1, Number(body?.quantity ?? 1));
 
-    // Totals
+    // Calculate totals
     const subtotal = PRODUCT.unit_price_cents * qty;
-    const shipping = 599;           // flat $5.99 example
-    const tax = Math.round(subtotal * 0.07); // 7% example
+    const shipping = 599;           // flat $5.99
+    const tax = Math.round(subtotal * 0.07); // 7% tax
     const total = subtotal + shipping + tax;
 
     const orderNumber = makeOrderNumber();
 
-    // Check if RPC function exists, if not create order manually
-    const { data: rpcData, error: rpcError } = await supabase.rpc("create_order_with_items", {
-      p_user_id: userId,
-      p_order_number: orderNumber,
-      p_currency: PRODUCT.currency,
-      p_subtotal_cents: subtotal,
-      p_shipping_cents: shipping,
-      p_tax_cents: tax,
-      p_total_cents: total,
-      p_shipping_name: s.name,
-      p_shipping_phone: s.phone,
-      p_shipping_address1: s.address1,
-      p_shipping_address2: s.address2 ?? "",
-      p_shipping_city: s.city,
-      p_shipping_state: s.state,
-      p_shipping_postal: s.postal,
-      p_shipping_country: s.country,
-      p_metadata: {
-        source: body?.source ?? null,
-        notes: body?.notes ?? null,
-      },
-      p_items: [{
+    // Create order manually (since RPC might not exist)
+    const { data: orderData, error: orderError } = await supabase
+      .from('orders')
+      .insert({
+        user_id: userId,
+        order_number: orderNumber,
+        status: 'pending',
+        currency: PRODUCT.currency,
+        subtotal_cents: subtotal,
+        shipping_cents: shipping,
+        tax_cents: tax,
+        total_cents: total,
+        shipping_name: s.name,
+        shipping_phone: s.phone,
+        shipping_address1: s.address1,
+        shipping_address2: s.address2 || null,
+        shipping_city: s.city,
+        shipping_state: s.state,
+        shipping_postal: s.postal,
+        shipping_country: s.country,
+        metadata: {
+          source: body?.source ?? null,
+          notes: body?.notes ?? null,
+        }
+      })
+      .select()
+      .single();
+    
+    if (orderError) {
+      console.error("Order creation error:", orderError);
+      return new Response(JSON.stringify({ 
+        error: "Failed to create order",
+        details: orderError.message 
+      }), { 
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+    
+    // Create order items
+    const { error: itemsError } = await supabase
+      .from('order_items')
+      .insert({
+        order_id: orderData.id,
         product_id: PRODUCT.product_id,
         sku: PRODUCT.sku,
         product_name: PRODUCT.product_name,
@@ -216,122 +210,29 @@ Deno.serve(async (req: Request) => {
         unit_price_cents: PRODUCT.unit_price_cents,
         image_url: PRODUCT.image_url,
         currency: PRODUCT.currency
-      }]
-    });
-
-    if (rpcError) {
-      // If RPC doesn't exist, create order manually
-      if (rpcError.message?.includes('function') && rpcError.message?.includes('does not exist')) {
-        // Create order manually
-        const { data: orderData, error: orderError } = await supabase
-          .from('orders')
-          .insert({
-            user_id: userId,
-            order_number: orderNumber,
-            status: 'pending',
-            currency: PRODUCT.currency,
-            subtotal_cents: subtotal,
-            shipping_cents: shipping,
-            tax_cents: tax,
-            total_cents: total,
-            shipping_name: s.name,
-            shipping_phone: s.phone,
-            shipping_address1: s.address1,
-            shipping_address2: s.address2 || null,
-            shipping_city: s.city,
-            shipping_state: s.state,
-            shipping_postal: s.postal,
-            shipping_country: s.country,
-            metadata: {
-              source: body?.source ?? null,
-              notes: body?.notes ?? null,
-            }
-          })
-          .select()
-          .single();
-        
-        if (orderError) {
-          return new Response(JSON.stringify({ 
-            error: "Failed to create order",
-            details: orderError.message 
-          }), { 
-            status: 500,
-            headers: { ...corsHeaders, "Content-Type": "application/json" }
-          });
-        }
-        
-        // Create order items
-        const { error: itemsError } = await supabase
-          .from('order_items')
-          .insert({
-            order_id: orderData.id,
-            product_id: PRODUCT.product_id,
-            sku: PRODUCT.sku,
-            product_name: PRODUCT.product_name,
-            quantity: qty,
-            unit_price_cents: PRODUCT.unit_price_cents,
-            image_url: PRODUCT.image_url,
-            currency: PRODUCT.currency
-          });
-        
-        if (itemsError) {
-          return new Response(JSON.stringify({ 
-            error: "Failed to create order items",
-            details: itemsError.message 
-          }), { 
-            status: 500,
-            headers: { ...corsHeaders, "Content-Type": "application/json" }
-          });
-        }
-        
-        // Create order event for traceability
-        await supabase.from('order_events').insert({
-          order_id: orderData.id,
-          type: 'created',
-          message: 'Order created via site_checkout'
-        });
-        
-        // Use orderData as the result
-        const created = orderData;
-        
-        return new Response(JSON.stringify({
-          ok: true,
-          order: created,
-          totals: {
-            subtotal_cents: subtotal,
-            shipping_cents: shipping,
-            tax_cents: tax,
-            total_cents: total,
-            human: {
-              subtotal: `$${dollars(subtotal)}`,
-              shipping: `$${dollars(shipping)}`,
-              tax: `$${dollars(tax)}`,
-              total: `$${dollars(total)}`
-            }
-          }
-        }), { 
-          headers: { 
-            ...corsHeaders,
-            "Content-Type": "application/json" 
-          } 
-        });
-      } else {
-        return new Response(JSON.stringify({ 
-          error: "Database operation failed",
-          details: rpcError.message 
-        }), { 
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" }
-        });
-      }
+      });
+    
+    if (itemsError) {
+      console.error("Order items creation error:", itemsError);
+      return new Response(JSON.stringify({ 
+        error: "Failed to create order items",
+        details: itemsError.message 
+      }), { 
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
     }
-
-    // Handle RPC response (could be array or single object)
-    const created = Array.isArray(rpcData) ? rpcData[0] : rpcData;
+    
+    // Create order event for traceability
+    await supabase.from('order_events').insert({
+      order_id: orderData.id,
+      type: 'created',
+      message: 'Order created via site_checkout'
+    });
     
     return new Response(JSON.stringify({
       ok: true,
-      order: created,
+      order: orderData,
       totals: {
         subtotal_cents: subtotal,
         shipping_cents: shipping,
@@ -352,6 +253,7 @@ Deno.serve(async (req: Request) => {
     });
 
   } catch (e: any) {
+    console.error("Edge Function error:", e);
     return new Response(JSON.stringify({ 
       error: "Internal server error",
       details: String(e?.message ?? e) 
