@@ -106,28 +106,68 @@ export default function CheckoutForm() {
     
     (async () => {
       try {
-        const { data, error } = await supabase
+        // First, get user's basic info from auth
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        // Then try to get profile data
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("full_name, phone, shipping_address")
+          .eq("id", sessionUserId)
+          .maybeSingle();
+        
+        // Finally, try to get last order for shipping info
+        const { data: lastOrder } = await supabase
           .from("orders")
-          .select("shipping_name, shipping_phone, shipping_address1, shipping_address2, shipping_city, shipping_state, shipping_postal, shipping_country, placed_at")
+          .select("shipping_name, shipping_phone, shipping_address1, shipping_address2, shipping_city, shipping_state, shipping_postal, shipping_country")
           .eq("user_id", sessionUserId)
           .order("placed_at", { ascending: false, nullsFirst: false })
           .limit(1)
           .maybeSingle();
         
-        if (data) {
-          setShipping({
-            name: data.shipping_name ?? "",
-            phone: data.shipping_phone ?? "",
-            address1: data.shipping_address1 ?? "",
-            address2: data.shipping_address2 ?? "",
-            city: data.shipping_city ?? "",
-            state: data.shipping_state ?? "",
-            postal: data.shipping_postal ?? "",
-            country: data.shipping_country ?? "US",
-          });
+        // Prefill with available data (profile takes precedence, then last order, then auth user)
+        const shippingAddr = profile?.shipping_address || {};
+        
+        setShipping({
+          name: profile?.full_name || lastOrder?.shipping_name || user?.user_metadata?.full_name || "",
+          phone: profile?.phone || lastOrder?.shipping_phone || "",
+          address1: shippingAddr.address1 || lastOrder?.shipping_address1 || "",
+          address2: shippingAddr.address2 || lastOrder?.shipping_address2 || "",
+          city: shippingAddr.city || lastOrder?.shipping_city || "",
+          state: shippingAddr.state || lastOrder?.shipping_state || "",
+          postal: shippingAddr.postal || lastOrder?.shipping_postal || "",
+          country: shippingAddr.country || lastOrder?.shipping_country || "US",
+        });
+        
+        // If we have some data, show a success message
+        if (profile || lastOrder) {
+          console.log('✅ Prefilled checkout form with saved data');
         } else {
+          setShipping({
+            name: user?.user_metadata?.full_name || "",
+            phone: "",
+            address1: "",
+            address2: "",
+            city: "",
+            state: "",
+            postal: "",
+            country: "US",
+          });
         }
       } catch (err) {
+        console.warn('Failed to prefill checkout form:', err);
+        // Fallback to basic user info if available
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            setShipping(prev => ({
+              ...prev,
+              name: user.user_metadata?.full_name || "",
+            }));
+          }
+        } catch (authErr) {
+          console.warn('Failed to get user info:', authErr);
+        }
       } finally {
         setPrefillLoading(false);
       }
