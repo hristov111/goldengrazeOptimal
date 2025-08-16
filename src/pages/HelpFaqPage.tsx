@@ -215,7 +215,7 @@ const HelpFaqPage: React.FC = () => {
               CONTACT SUPPORT
             </button>
           </div>
-              onClick={() => navigate('/help-faq')}
+        </div>
       </div>
     </div>
   );
