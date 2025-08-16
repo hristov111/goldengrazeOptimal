@@ -82,27 +82,36 @@ const Order = () => {
   }, [isLoggedIn, user]);
 
   const loadUserProfile = async () => {
+    console.log('🔍 loadUserProfile called');
+    console.log('📊 Auth state:', { isLoggedIn, user });
+    
     if (!isLoggedIn || !user) {
+      console.log('❌ Not logged in or no user, skipping profile load');
       return; // Not logged in, render empty form
     }
 
     setIsLoadingProfile(true);
     setProfileError('');
+    console.log('🚀 Starting profile fetch for user:', user.id);
 
     try {
       // Get user profile from Supabase
       const { data: profile, error } = await database.getUserProfile(user.id);
+      
+      console.log('📥 Profile fetch result:', { profile, error });
       
       if (error) {
         throw error;
       }
       
       if (profile) {
+        console.log('✅ Profile found:', profile);
         // Extract shipping address from profile
         const shippingAddress = profile.shipping_address || {};
+        console.log('📦 Shipping address:', shippingAddress);
         
         // Prefill form with saved data
-        setFormData(prev => ({
+        const newFormData = {
           ...prev,
           fullName: profile.full_name || user.name || '',
           email: user.email || '',
@@ -113,8 +122,13 @@ const Order = () => {
           state: shippingAddress.state || '',
           zip: shippingAddress.zip || '',
           notes: ''
+        };
+        console.log('📝 Setting form data:', newFormData);
+        setFormData(prev => ({
+          ...newFormData
         }));
       } else {
+        console.log('⚠️ No profile found, using basic user data');
         // No profile found, use basic user data
         setFormData(prev => ({
           ...prev,
@@ -123,16 +137,19 @@ const Order = () => {
         }));
       }
     } catch (error) {
+      console.error('❌ Profile fetch error:', error);
       console.warn('Failed to load user profile:', error);
       setProfileError("We couldn't load your saved details. You can fill them in below.");
       
       // Still prefill with basic user data
+      console.log('🔄 Falling back to basic user data');
       setFormData(prev => ({
         ...prev,
         fullName: user.name || '',
         email: user.email || ''
       }));
     } finally {
+      console.log('✅ Profile loading complete');
       setIsLoadingProfile(false);
     }
   };
