@@ -196,3 +196,38 @@ TT_S2S.addToCart({
 - **Analytics**: TikTok Pixel + Server-side Events API
 
 The system supports flexible payload structures via `TIKTOK_PAYLOAD_MODE` for easy adaptation to TikTok API changes.
+
+## Guest Checkout Setup
+
+### Environment Setup
+- Copy `.env.local.example` → `.env.local` and fill VITE vars (frontend)
+- Copy `supabase/functions/.env.example` → `supabase/functions/.env` and fill server secrets
+
+### Local Development
+```bash
+npm run functions:serve   # serves the Edge Function with no JWT requirement
+npm run dev               # Vite app
+```
+
+### Deploy
+```bash
+npm run functions:deploy
+```
+
+### Testing
+
+#### CORS preflight sanity check
+```bash
+curl -i -X OPTIONS https://YOUR-REF.functions.supabase.co/place-order \
+  -H "Origin: http://localhost:5173" \
+  -H "Access-Control-Request-Method: POST" \
+  -H "Access-Control-Request-Headers: content-type,authorization,apikey,x-client-info,idempotency-key"
+```
+
+#### POST sanity check (guest order)
+```bash
+curl -i -X POST https://YOUR-REF.functions.supabase.co/place-order \
+  -H "Origin: http://localhost:5173" \
+  -H "Content-Type: application/json" \
+  -d '{"quantity":1,"shipping":{"name":"Test User","email":"test@example.com","phone":"555-555-5555","address1":"123 Main St","city":"San Francisco","state":"CA","postal":"94103","country":"US"}}'
+```

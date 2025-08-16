@@ -6,6 +6,7 @@ import { supabase } from "../lib/supabase";
 type Shipping = {
   name: string; 
   email: string;
+  email: string;
   phone: string;
   address1: string; 
   address2?: string;
@@ -74,6 +75,7 @@ export default function CheckoutForm() {
   const [sessionUserId, setSessionUserId] = useState<string | null>(null);
   const [shipping, setShipping] = useState<Shipping>({
     name: "", 
+    email: "",
     email: "",
     phone: "", 
     address1: "", 
@@ -192,6 +194,12 @@ export default function CheckoutForm() {
       return false;
     }
     
+    // Validate email format
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(shipping.email)) {
+      setError('Please enter a valid email address');
+      return false;
+    }
+    
     if (shipping.country.toUpperCase() !== 'US') {
       setError('Only US shipping is supported');
       return false;
@@ -210,14 +218,14 @@ export default function CheckoutForm() {
     setResult(null);
     
     try {
-      // Get session for user ID
+      // Get session for user ID (optional - guest checkout allowed)
       const { data } = await supabase.auth.getSession();
       const userId = data.session?.user?.id ?? null;
       
       // Use Supabase SDK to invoke Edge Function
       const { data: result, error: invokeError } = await supabase.functions.invoke('place-order', {
         body: {
-          userId,
+          userId,               // can be null (guest)
           quantity,
           shipping,
           notes,
@@ -229,16 +237,12 @@ export default function CheckoutForm() {
       });
       
       if (invokeError) {
-        console.error('Order API Error:', invokeError);
+        const server = (invokeError as any).context; // Supabase puts server JSON here
+        const errorMessage = server?.error || server?.message || invokeError.message || 'Order failed. Please try again.';
+        console.error('Order API Error:', { error: invokeError, context: server });
         
-        // Handle specific Supabase function errors
-        if (invokeError.message?.includes('Failed to send a request')) {
-          throw new Error('Unable to connect to order service. Please check your internet connection and try again.');
-        } else if (invokeError.message?.includes('configuration error')) {
-          throw new Error('Service temporarily unavailable. Please try again later or contact support.');
-        } else {
-          throw new Error(invokeError.message || 'Order failed. Please try again.');
-        }
+        setError(errorMessage);
+        return;
       }
       
       setResult(result);
@@ -351,27 +355,28 @@ export default function CheckoutForm() {
                 </div>
               </div>
 
-              {/* Email & Phone */}
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-stone-700 text-sm tracking-wider mb-2">
-                    EMAIL ADDRESS *
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Mail size={18} className="text-stone-400" />
-                    </div>
-                    <input
-                      type="email"
-                      value={shipping.email}
-                      onChange={(e) => update("email", e.target.value)}
-                      required
-                      className="w-full pl-10 pr-4 py-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-200 focus:border-amber-400 transition-colors"
-                      placeholder="your@email.com"
-                    />
+              {/* Email */}
+              <div>
+                <label className="block text-stone-700 text-sm tracking-wider mb-2">
+                  EMAIL ADDRESS *
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Mail size={18} className="text-stone-400" />
                   </div>
+                  <input
+                    type="email"
+                    value={shipping.email}
+                    onChange={(e) => update("email", e.target.value)}
+                    required
+                    className="w-full pl-10 pr-4 py-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-200 focus:border-amber-400 transition-colors"
+                    placeholder="your@email.com"
+                  />
                 </div>
+              </div>
 
+              {/* Phone & Quantity */}
+              <div className="grid md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-stone-700 text-sm tracking-wider mb-2">
                     PHONE NUMBER *
