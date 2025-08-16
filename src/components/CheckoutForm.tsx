@@ -111,7 +111,6 @@ export default function CheckoutForm() {
           .select("shipping_name, shipping_phone, shipping_address1, shipping_address2, shipping_city, shipping_state, shipping_postal, shipping_country, placed_at, created_at")
           .eq("user_id", sessionUserId)
           .order("placed_at", { ascending: false, nullsFirst: false })
-          .order("created_at", { ascending: false })
           .limit(1)
           .maybeSingle();
         
