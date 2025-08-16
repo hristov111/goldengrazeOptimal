@@ -4,7 +4,6 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { CartProvider } from './contexts/CartContext';
 import { WishlistProvider } from './contexts/WishlistContext';
 import Navigation from './components/Navigation';
-import Navigation from './components/Navigation';
 import HomePage from './pages/HomePage';
 import OrderPage from './pages/OrderPage';
 import ProductPage from './pages/ProductPage';
