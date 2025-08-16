@@ -1,26 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, ShoppingBag } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useSessionUser } from '../lib/hooks/useSessionUser';
 import CartList from '../components/cart/CartList';
 import CartTotals from '../components/cart/CartTotals';
 
-interface CartPageProps {
-  setCurrentPage: (page: string) => void;
-}
-
-const CartPage: React.FC<CartPageProps> = ({ setCurrentPage }) => {
+const CartPage: React.FC = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [cartItems, setCartItems] = useState<any[]>([]);
   const { user, loading } = useSessionUser();
-
-  useEffect(() => {
-    const handleNavigateToCheckout = () => {
-      setCurrentPage('checkout');
-    };
-
-    window.addEventListener('navigateToCheckout', handleNavigateToCheckout);
-    return () => window.removeEventListener('navigateToCheckout', handleNavigateToCheckout);
-  }, [setCurrentPage]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     setIsVisible(true);
@@ -30,7 +19,7 @@ const CartPage: React.FC<CartPageProps> = ({ setCurrentPage }) => {
 
   // Redirect to sign in if not authenticated
   if (!loading && !user) {
-    setCurrentPage('signin');
+    navigate('/signin');
     return null;
   }
 
@@ -49,7 +38,7 @@ const CartPage: React.FC<CartPageProps> = ({ setCurrentPage }) => {
           isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
         }`}>
           <button
-            onClick={() => setCurrentPage('home')}
+            onClick={() => navigate('/')}
             className="flex items-center space-x-2 text-stone-600 hover:text-amber-600 transition-colors mb-8 group"
           >
             <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
@@ -92,7 +81,7 @@ const CartPage: React.FC<CartPageProps> = ({ setCurrentPage }) => {
                   isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
                 }`}>
                   <button
-                    onClick={() => setCurrentPage('products')}
+                    onClick={() => navigate('/products')}
                     className="flex items-center space-x-2 text-amber-600 hover:text-amber-700 transition-colors group"
                   >
                     <span className="tracking-wider">← Continue Shopping</span>

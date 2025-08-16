@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Trash2, Plus, Minus, Loader2, ShoppingBag } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { database, supabase } from '../../lib/supabase';
 import { useSessionUser } from '../../lib/hooks/useSessionUser';
 import Money from '../common/Money';
@@ -34,6 +35,7 @@ const CartList: React.FC<CartListProps> = ({ onItemsChange }) => {
   const [updatingItems, setUpdatingItems] = useState<Set<string>>(new Set());
   const [productImages, setProductImages] = useState<{[key: string]: string}>({});
   const { user } = useSessionUser();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (user) {
@@ -202,9 +204,7 @@ const CartList: React.FC<CartListProps> = ({ onItemsChange }) => {
         </p>
         <button
           onClick={() => {
-            // Get the setCurrentPage function from parent components
-            const event = new CustomEvent('navigateToProducts');
-            window.dispatchEvent(event);
+            navigate('/products');
           }}
           className="bg-amber-400 hover:bg-amber-500 text-white px-8 py-4 tracking-widest transition-all duration-300 rounded-lg font-medium transform hover:scale-105"
         >
