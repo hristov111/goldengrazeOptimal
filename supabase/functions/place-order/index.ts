@@ -54,6 +54,9 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
+    if (!body) {
+      return new Response(JSON.stringify({ error: "Request body is required" }), {
+        status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
