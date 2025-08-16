@@ -62,7 +62,6 @@ const AppContent: React.FC = () => {
           </div>
         } />
         <Route path="/cart" element={<CartPage />} />
-        <Route path="/cart" element={<CartPage setCurrentPage={setCurrentPage} />} />
         <Route path="/wishlist" element={<WishlistPage />} />
         <Route path="/signin" element={<SignInPage />} />
         <Route path="/signup" element={<SignUpPage />} />
