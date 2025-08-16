@@ -143,7 +143,7 @@ const FixedVideoPlayer: React.FC<FixedVideoPlayerProps> = ({ isVisible, onClose 
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                navigate('/order');
+                navigate('/checkout');
               }}
               className="px-4 py-2 bg-amber-400 hover:bg-amber-500 text-black font-medium text-sm tracking-wider rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
             >

@@ -164,6 +164,7 @@ const BrandIntroduction: React.FC<BrandIntroductionProps> = () => {
               className="aspect-square bg-gradient-to-br from-amber-100 via-stone-200 to-emerald-100 rounded-lg overflow-hidden shadow-2xl relative group cursor-pointer transform transition-all duration-500 hover:scale-105 hover:shadow-3xl md:mt-0"
               onMouseMove={handleMouseMove}
              onClick={() => navigate('/order')}
+             onClick={() => navigate('/checkout')}
             >
               <img 
                 src="/product_images/golden_graze1.png" 
@@ -190,7 +191,7 @@ const BrandIntroduction: React.FC<BrandIntroductionProps> = () => {
             {/* Shop Now Button under image */}
             <div className="mt-6 text-center max-w-md mx-auto">
               <button 
-                onClick={() => navigate('/order')}
+                onClick={() => navigate('/checkout')}
                 className="group relative px-8 py-4 bg-amber-400 hover:bg-amber-500 text-white font-medium tracking-widest transition-all duration-300 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 overflow-hidden"
               >
                 <span className="relative z-10 flex items-center justify-center space-x-2">

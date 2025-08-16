@@ -412,7 +412,7 @@ const ProductSpotlight: React.FC<ProductSpotlightProps> = () => {
                 <BuyNowButton
                   productId={product.id}
                   productName={product.name}
-                  onClick={() => navigate('/order')}
+                  onClick={() => navigate('/checkout')}
                   className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700"
                 />
                 
@@ -425,7 +425,7 @@ const ProductSpotlight: React.FC<ProductSpotlightProps> = () => {
                 />
                 
                 <button 
-                  onClick={() => navigate('/order')}
+                  onClick={() => navigate('/checkout')}
                   className="w-full border-2 border-amber-400 text-amber-400 hover:bg-amber-400 hover:text-black py-3 px-6 tracking-widest transition-all duration-300 rounded-lg font-medium backdrop-blur-sm hover:backdrop-blur-md shadow-lg hover:shadow-xl transform hover:scale-105"
                 >
                   BUY NOW

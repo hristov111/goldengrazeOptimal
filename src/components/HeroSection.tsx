@@ -138,7 +138,7 @@ const HeroSection: React.FC<HeroSectionProps> = () => {
           </p>
           
           <button 
-            onClick={() => navigate('/order')}
+            onClick={() => navigate('/checkout')}
             className="group relative px-6 sm:px-8 py-3 sm:py-4 border border-amber-400/50 text-amber-400 text-sm sm:text-base tracking-widest hover:border-amber-400 transition-all duration-300 hover:shadow-[0_0_20px_rgba(212,175,55,0.3)]"
           >
             <span className="group-hover:text-amber-300 transition-colors">BUY NOW</span>

@@ -271,7 +271,7 @@ const VideoShowcase: React.FC<VideoShowcaseProps> = () => {
         }`}>
           <p className="text-stone-600 mb-6">Ready to begin your own ritual?</p>
           <button 
-            onClick={() => navigate('/order')}
+            onClick={() => navigate('/checkout')}
             className="group px-8 py-4 bg-transparent border-2 border-amber-400 text-amber-700 hover:bg-amber-400 hover:text-white font-medium tracking-widest transition-all duration-300 rounded-lg"
           >
             <span className="flex items-center space-x-2">

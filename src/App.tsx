@@ -15,6 +15,7 @@ import SignUpPage from './pages/SignUpPage';
 import AccountSettingsPage from './pages/AccountSettingsPage';
 import OrdersPage from './pages/OrdersPage';
 import OrderDetailPage from './pages/OrderDetailPage';
+import CheckoutPage from './pages/CheckoutPage';
 import Footer from './components/Footer';
 import HelpPage from './pages/HelpPage';
 import HelpFaqPage from './pages/HelpFaqPage';
@@ -47,6 +48,7 @@ const AppContent: React.FC = () => {
           </div>
         } />
         <Route path="/order" element={<Order />} />
+        <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/product" element={
           <div>
             <ProductPage />

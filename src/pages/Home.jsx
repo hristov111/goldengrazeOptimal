@@ -19,7 +19,7 @@ const Home = () => {
           </div>
           
           <button 
-            onClick={() => navigate('/order')}
+            onClick={() => navigate('/checkout')}
             className="buy-now px-8 py-4 bg-amber-500 hover:bg-amber-600 text-white font-medium text-lg tracking-widest transition-all duration-300 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105"
           >
             BUY NOW
@@ -61,7 +61,7 @@ const Home = () => {
               </div>
 
               <button 
-                onClick={() => navigate('/order')}
+                onClick={() => navigate('/checkout')}
                 className="px-8 py-4 bg-amber-500 hover:bg-amber-600 text-white font-medium tracking-widest transition-all duration-300 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105"
               >
                 SHOP NOW
