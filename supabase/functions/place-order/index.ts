@@ -1,14 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 
-const PRODUCT = {
-  product_id: null,
-  sku: "GG-TALLOW-4OZ", 
-  product_name: "Golden Graze Whipped Tallow Balm — 4oz",
-  unit_price_cents: 2999,
-  image_url: "https://cdn.example.com/gg-4oz.jpg",
-  currency: "USD",
-};
-
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
@@ -38,6 +29,30 @@ Deno.serve(async (req: Request) => {
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
+
+    // Get the first available product from the database
+    const { data: product, error: productError } = await supabase
+      .from('products')
+      .select('id, name, price, image_url')
+      .eq('is_active', true)
+      .limit(1)
+      .single();
+    
+    if (productError || !product) {
+      return new Response(JSON.stringify({ error: "No products available" }), { 
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+
+    const PRODUCT = {
+      product_id: product.id,
+      sku: "GG-TALLOW-4OZ", 
+      product_name: product.name,
+      unit_price_cents: Math.round(product.price * 100), // Convert to cents
+      image_url: product.image_url || "https://cdn.example.com/gg-4oz.jpg",
+      currency: "USD",
+    };
 
     // Get auth user (optional for guest checkout)
     let userId = null;
