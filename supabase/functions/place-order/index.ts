@@ -31,6 +31,9 @@ function dollars(cents: number) {
 
 Deno.serve(async (req: Request) => {
   const headers = cors(req);
+  
+  // Get idempotency key for duplicate request handling
+  const idempotencyKey = req.headers.get('Idempotency-Key');
 
   // Preflight
   if (req.method === 'OPTIONS') {
@@ -151,41 +154,112 @@ Deno.serve(async (req: Request) => {
     const tax = Math.round(subtotal * 0.07); // 7% example
     const total = subtotal + shippingCents + tax;
 
-    const orderNumber = makeOrderNumber();
+    // Use idempotency key to generate consistent order number for retries
+    let orderNumber: string;
+    if (idempotencyKey) {
+      // Create deterministic order number from idempotency key
+      const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(idempotencyKey));
+      const hashArray = Array.from(new Uint8Array(hash));
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 8);
+      orderNumber = `GG-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${hashHex}`;
+    } else {
+      orderNumber = makeOrderNumber();
+    }
 
     // ----- Manual inserts (RPC removed for simplicity) -----
-    const { data: orderRow, error: orderErr } = await supabase
-      .from('orders')
-      .insert({
-        user_id: userId, // can be null for guest orders
-        order_number: orderNumber,
-        status: 'pending',
-        currency: PRODUCT.currency,
-        subtotal_cents: subtotal,
-        shipping_cents: shippingCents,
-        tax_cents: tax,
-        total_cents: total,
-        shipping_name: s.name,
-        shipping_phone: s.phone,
-        shipping_address1: s.address1,
-        shipping_address2: s.address2 || null,
-        shipping_city: s.city,
-        shipping_state: s.state,
-        shipping_postal: s.postal,
-        shipping_country: s.country,
-        metadata: { 
-          source: body?.source ?? 'site_checkout', 
-          notes: body?.notes ?? null,
-          guest_email: userId ? null : s.email // Store email for guest orders
-        },
-      })
-      .select()
-      .single();
+    let orderRow: any;
+    let retryCount = 0;
+    const maxRetries = 3;
+    
+    while (retryCount < maxRetries) {
+      const { data: insertData, error: orderErr } = await supabase
+        .from('orders')
+        .insert({
+          user_id: userId, // can be null for guest orders
+          order_number: orderNumber,
+          status: 'pending',
+          currency: PRODUCT.currency,
+          subtotal_cents: subtotal,
+          shipping_cents: shippingCents,
+          tax_cents: tax,
+          total_cents: total,
+          shipping_name: s.name,
+          shipping_phone: s.phone,
+          shipping_address1: s.address1,
+          shipping_address2: s.address2 || null,
+          shipping_city: s.city,
+          shipping_state: s.state,
+          shipping_postal: s.postal,
+          shipping_country: s.country,
+          metadata: { 
+            source: body?.source ?? 'site_checkout', 
+            notes: body?.notes ?? null,
+            guest_email: userId ? null : s.email, // Store email for guest orders
+            idempotency_key: idempotencyKey || null
+          },
+        })
+        .select()
+        .single();
 
-    if (orderErr) {
+      if (!orderErr) {
+        orderRow = insertData;
+        break;
+      }
+      
+      // Handle unique constraint violation (duplicate order number)
+      if (orderErr.code === '23505' && orderErr.message.includes('order_number')) {
+        if (idempotencyKey) {
+          // For idempotent requests, return existing order
+          const { data: existingOrder, error: fetchErr } = await supabase
+            .from('orders')
+            .select('*')
+            .eq('order_number', orderNumber)
+            .single();
+          
+          if (!fetchErr && existingOrder) {
+            return new Response(JSON.stringify({
+              ok: true,
+              order: existingOrder,
+              totals: {
+                subtotal_cents: existingOrder.subtotal_cents,
+                shipping_cents: existingOrder.shipping_cents,
+                tax_cents: existingOrder.tax_cents,
+                total_cents: existingOrder.total_cents,
+                human: {
+                  subtotal: `$${dollars(existingOrder.subtotal_cents)}`,
+                  shipping: `$${dollars(existingOrder.shipping_cents)}`,
+                  tax: `$${dollars(existingOrder.tax_cents)}`,
+                  total: `$${dollars(existingOrder.total_cents)}`,
+                },
+              },
+              duplicate: true
+            }), { 
+              status: 200, 
+              headers: { ...headers, 'Content-Type': 'application/json' } 
+            });
+          }
+        }
+        
+        // Generate new order number and retry
+        orderNumber = makeOrderNumber();
+        retryCount++;
+        continue;
+      }
+      
+      // Other errors - fail immediately
       return new Response(JSON.stringify({ 
         error: 'Failed to create order', 
         details: orderErr.message 
+      }), {
+        status: 500, 
+        headers: { ...headers, 'Content-Type': 'application/json' },
+      });
+    }
+    
+    if (!orderRow) {
+      return new Response(JSON.stringify({ 
+        error: 'Failed to create order after retries', 
+        details: 'Unable to generate unique order number' 
       }), {
         status: 500, 
         headers: { ...headers, 'Content-Type': 'application/json' },

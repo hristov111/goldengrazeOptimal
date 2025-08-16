@@ -201,6 +201,7 @@ The system supports flexible payload structures via `TIKTOK_PAYLOAD_MODE` for ea
 
 ### Environment Setup
 - Copy `.env.example` → `.env` and fill all environment variables (both frontend VITE vars and server secrets)
+- The Edge Function will use the same `.env` file for server secrets
 
 ### Local Development
 ```bash
@@ -211,6 +212,12 @@ npm run dev               # Vite app
 ### Deploy
 ```bash
 npm run functions:deploy
+```
+
+### Database Setup
+```bash
+# Apply the unique constraint migration
+supabase db push
 ```
 
 ### Testing
@@ -228,5 +235,18 @@ curl -i -X OPTIONS https://YOUR-REF.functions.supabase.co/place-order \
 curl -i -X POST https://YOUR-REF.functions.supabase.co/place-order \
   -H "Origin: http://localhost:5173" \
   -H "Content-Type: application/json" \
+  -H "Idempotency-Key: test-$(date +%s)" \
   -d '{"quantity":1,"shipping":{"name":"Test User","email":"test@example.com","phone":"555-555-5555","address1":"123 Main St","city":"San Francisco","state":"CA","postal":"94103","country":"US"}}'
+```
+
+#### Test idempotency (should return same order)
+```bash
+IDEM_KEY="test-idempotency-123"
+curl -i -X POST https://YOUR-REF.functions.supabase.co/place-order \
+  -H "Origin: http://localhost:5173" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: $IDEM_KEY" \
+  -d '{"quantity":1,"shipping":{"name":"Test User","email":"test@example.com","phone":"555-555-5555","address1":"123 Main St","city":"San Francisco","state":"CA","postal":"94103","country":"US"}}'
+
+# Run the same command again - should return existing order
 ```
