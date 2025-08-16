@@ -54,22 +54,22 @@ Deno.serve(async (req: Request) => {
       currency: "USD",
     };
 
-    // Get auth user (optional for guest checkout)
-    let userId = null;
-    const authHeader = req.headers.get("Authorization") ?? "";
+    // Get the first available product from the database
+    const { data: product, error: productError } = await supabase
+      .from('products')
+      .select('id, name, price, image_url')
+      .eq('is_active', true)
+      .limit(1)
+      .single();
     
-    if (authHeader) {
-      const jwt = authHeader.replace("Bearer ", "");
-      const { data: auth } = await supabase.auth.getUser(jwt);
-      userId = auth?.user?.id || null;
-    }
-    
-    // Also check if userId is provided in request body (for guest checkout)
-    const body = await req.json();
-    if (!userId && body?.userId) {
-      userId = body.userId;
+    if (productError || !product) {
+      return new Response(JSON.stringify({ error: "No products available" }), { 
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
     }
 
+    const PRODUCT = {
     const qty = Math.max(1, Number(body?.quantity ?? 1));
 
     // Validate shipping (US)
