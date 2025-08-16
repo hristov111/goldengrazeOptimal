@@ -636,24 +636,34 @@ export default function CheckoutForm() {
             <h3 className="font-serif text-xl text-stone-900 mb-6">Order Summary</h3>
             
             {/* Product */}
-            <div className="flex items-center space-x-4 mb-6 p-4 bg-stone-50 rounded-lg">
-              <div className="w-16 h-16 bg-gradient-to-br from-amber-100 to-amber-200 rounded-lg flex items-center justify-center">
-                <img 
-                  src="/product_images/golden_graze1.png" 
-                  alt="Golden Graze Whipped Tallow Balm"
-                  className="w-full h-full object-cover rounded-lg"
-                  onError={(e) => {
-                    e.currentTarget.src = "/balm_images/firstPic.png";
-                  }}
-                />
+            {loadingProduct ? (
+              <div className="flex items-center justify-center py-8 mb-6">
+                <Loader2 size={24} className="text-amber-400 animate-spin" />
               </div>
-              <div className="flex-1">
-                <h4 className="font-medium text-stone-900">Golden Graze Whipped Tallow Balm</h4>
-                <p className="text-stone-600 text-sm">4oz jar</p>
-                <p className="text-amber-600 text-sm">Unscented</p>
-                <p className="text-stone-600 text-sm">Qty: {quantity}</p>
+            ) : (
+              <div className="flex items-center space-x-4 mb-6 p-4 bg-stone-50 rounded-lg">
+                <div className="w-16 h-16 bg-gradient-to-br from-amber-100 to-amber-200 rounded-lg flex items-center justify-center">
+                  <img 
+                    src={productImage || '/product_images/golden_graze1.png'}
+                    alt={product?.name || 'Product'}
+                    className="w-full h-full object-cover rounded-lg"
+                    onError={(e) => {
+                      if (e.currentTarget.src.includes('golden_graze1.png')) {
+                        e.currentTarget.src = "/balm_images/firstPic.png";
+                      } else if (e.currentTarget.src.includes('firstPic.png')) {
+                        e.currentTarget.src = "/balm_images/Golder Graze.png";
+                      }
+                    }}
+                  />
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-medium text-stone-900">{product?.name || 'Golden Graze Whipped Tallow Balm'}</h4>
+                  <p className="text-stone-600 text-sm">{product?.size || '4oz jar'}</p>
+                  <p className="text-amber-600 text-sm">{product?.scent && product.scent !== 'unscented' ? product.scent : 'Unscented'}</p>
+                  <p className="text-stone-600 text-sm">Qty: {quantity}</p>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Pricing */}
             <div className="space-y-3 mb-6">
