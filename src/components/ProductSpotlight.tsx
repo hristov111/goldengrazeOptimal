@@ -424,12 +424,6 @@ const ProductSpotlight: React.FC<ProductSpotlightProps> = () => {
                   className="text-black hover:text-white"
                 />
                 
-                <button 
-                  onClick={() => navigate('/checkout')}
-                  className="w-full border-2 border-amber-400 text-amber-400 hover:bg-amber-400 hover:text-black py-3 px-6 tracking-widest transition-all duration-300 rounded-lg font-medium backdrop-blur-sm hover:backdrop-blur-md shadow-lg hover:shadow-xl transform hover:scale-105"
-                >
-                  BUY NOW
-                </button>
               </div>
 
               {/* Wishlist Button - Separate for better spacing */}
