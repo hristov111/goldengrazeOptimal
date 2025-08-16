@@ -17,7 +17,9 @@ function dollars(cents: number) {
 }
 
 Deno.serve(async (req: Request) => {
+  try {
     // Parse request body
+    let body;
     try {
       body = await req.json();
     } catch {
@@ -29,7 +31,7 @@ Deno.serve(async (req: Request) => {
 
     // Get user ID from auth header or body
     const authHeader = req.headers.get("Authorization");
-    userId = body?.userId || null;
+    let userId = body?.userId || null;
     
     if (!userId && authHeader?.startsWith("Bearer ")) {
       try {
@@ -81,24 +83,6 @@ Deno.serve(async (req: Request) => {
     }
     if ((s.country || "").toUpperCase() !== "US") {
       return new Response(JSON.stringify({ error: "Only US shipping is currently supported" }), { 
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
-      });
-    }
-
-    // Get the first available product from the database
-    const { data: product, error: productError } = await supabase
-      .from('products')
-      .select('id, name, price, image_url')
-      .eq('is_active', true)
-      .limit(1)
-      .single();
-    
-    if (productError || !product) {
-      return new Response(JSON.stringify({ 
-        error: "No active products available in the database",
-        details: productError?.message 
-      }), { 
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
