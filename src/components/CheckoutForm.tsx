@@ -172,13 +172,13 @@ export default function CheckoutForm() {
       
       // Use Supabase SDK to invoke Edge Function
       const { data: result, error: invokeError } = await supabase.functions.invoke('place-order', {
-        body: JSON.stringify({
+        body: {
           userId,
           quantity,
           shipping,
           notes,
           source: "site_checkout"
-        }),
+        },
         headers: {
           "Idempotency-Key": crypto.randomUUID()
         }

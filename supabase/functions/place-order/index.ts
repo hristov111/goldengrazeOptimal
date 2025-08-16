@@ -1,10 +1,22 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization, Idempotency-Key",
-};
+// Read environment variables at boot
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+function buildCorsHeaders(req: Request) {
+  const origin = req.headers.get('Origin') || '*';
+  return {
+    // Reflect Origin so credentialless/dev hosts work
+    'Access-Control-Allow-Origin': origin,
+    'Vary': 'Origin',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    // Include all headers that supabase-js sends
+    'Access-Control-Allow-Headers':
+      'authorization, apikey, x-client-info, content-type, idempotency-key',
+    'Access-Control-Max-Age': '86400',
+  };
+}
 
 function makeOrderNumber() {
   const ts = new Date().toISOString().replace(/[-:.TZ]/g, '').slice(0,14); // YYYYMMDDhhmmss
@@ -17,72 +29,52 @@ function dollars(cents: number) {
 }
 
 Deno.serve(async (req: Request) => {
-  // Handle preflight request first
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { status: 204, headers: corsHeaders });
+  const corsHeaders = buildCorsHeaders(req);
+
+  // Handle preflight request
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: corsHeaders });
   }
 
-  // Only allow POST requests
-  if (req.method !== "POST") {
-    return new Response(JSON.stringify({ error: "Method not allowed" }), {
+  // Only allow POST
+  if (req.method !== 'POST') {
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
       status: 405,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
 
-  let body: any = null;
+  let body: any;
   try {
     body = await req.json();
   } catch {
-    return new Response(JSON.stringify({ error: "Invalid JSON in request body" }), {
+    return new Response(JSON.stringify({ error: 'Invalid JSON' }), {
       status: 400,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
 
   try {
     // Check environment variables
-    const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
-    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-
-    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    if (!SUPABASE_URL || !SERVICE_ROLE) {
       console.error("Missing environment variables:", {
         SUPABASE_URL: !!SUPABASE_URL,
-        SUPABASE_SERVICE_ROLE_KEY: !!SUPABASE_SERVICE_ROLE_KEY
+        SERVICE_ROLE: !!SERVICE_ROLE
       });
       
       return new Response(JSON.stringify({ 
         error: "Edge Function configuration error",
-        details: "Missing Supabase environment variables. Please check your Supabase project settings and redeploy the function."
+        details: "Missing Supabase environment variables. Please check your Supabase project settings."
       }), {
         status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
     // Initialize Supabase client
-    let supabase;
-    try {
-      supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-    } catch (clientError) {
-      console.error("Failed to create Supabase client:", clientError);
-      return new Response(JSON.stringify({ 
-        error: "Failed to initialize database connection",
-        details: "Unable to connect to Supabase. Please try again later."
-      }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
-      });
-    }
+    const supabase = createClient(SUPABASE_URL, SERVICE_ROLE);
 
-    if (!body) {
-      return new Response(JSON.stringify({ error: "Request body is required" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
-      });
-    }
-
-    // Get user ID from body (passed from frontend)
+    // Get user ID from body
     const userId = body?.userId || null;
 
     // Get the first available product from the database
@@ -100,7 +92,7 @@ Deno.serve(async (req: Request) => {
         details: productError?.message || "Unable to find products in database"
       }), { 
         status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
@@ -121,7 +113,7 @@ Deno.serve(async (req: Request) => {
     if (missing.length) {
       return new Response(JSON.stringify({ error: `Missing required fields: ${missing.join(", ")}` }), { 
         status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
     
@@ -129,44 +121,35 @@ Deno.serve(async (req: Request) => {
     if (!/^\d{5}(-\d{4})?$/.test(s.postal)) {
       return new Response(JSON.stringify({ error: "Invalid US ZIP code format" }), { 
         status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
     
     if (s.country !== "US") {
       return new Response(JSON.stringify({ error: "Only US shipping is currently supported" }), { 
         status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
-
-    const PRODUCT = {
-      product_id: product.id,
-      sku: "GG-TALLOW-4OZ", 
-      product_name: product.name,
-      unit_price_cents: Math.round(product.price * 100), // Convert to cents
-      image_url: product.image_url || "https://cdn.example.com/gg-4oz.jpg",
-      currency: "USD",
-    };
 
     const qty = Math.max(1, Number(body?.quantity ?? 1));
 
     // Calculate totals
-    const subtotal = PRODUCT.unit_price_cents * qty;
+    const subtotal = Math.round(product.price * 100) * qty; // Convert to cents
     const shipping = 599;           // flat $5.99
     const tax = Math.round(subtotal * 0.07); // 7% tax
     const total = subtotal + shipping + tax;
 
     const orderNumber = makeOrderNumber();
 
-    // Create order manually (since RPC might not exist)
+    // Create order
     const { data: orderData, error: orderError } = await supabase
       .from('orders')
       .insert({
         user_id: userId,
         order_number: orderNumber,
         status: 'pending',
-        currency: PRODUCT.currency,
+        currency: 'USD',
         subtotal_cents: subtotal,
         shipping_cents: shipping,
         tax_cents: tax,
@@ -194,7 +177,7 @@ Deno.serve(async (req: Request) => {
         details: orderError.message 
       }), { 
         status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
     
@@ -203,13 +186,13 @@ Deno.serve(async (req: Request) => {
       .from('order_items')
       .insert({
         order_id: orderData.id,
-        product_id: PRODUCT.product_id,
-        sku: PRODUCT.sku,
-        product_name: PRODUCT.product_name,
+        product_id: product.id,
+        sku: 'GG-TALLOW-4OZ',
+        product_name: product.name,
         quantity: qty,
-        unit_price_cents: PRODUCT.unit_price_cents,
-        image_url: PRODUCT.image_url,
-        currency: PRODUCT.currency
+        unit_price_cents: Math.round(product.price * 100),
+        image_url: product.image_url,
+        currency: 'USD'
       });
     
     if (itemsError) {
@@ -219,7 +202,7 @@ Deno.serve(async (req: Request) => {
         details: itemsError.message 
       }), { 
         status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
     
@@ -248,7 +231,7 @@ Deno.serve(async (req: Request) => {
     }), { 
       headers: { 
         ...corsHeaders,
-        "Content-Type": "application/json" 
+        'Content-Type': 'application/json' 
       } 
     });
 
@@ -261,7 +244,7 @@ Deno.serve(async (req: Request) => {
       status: 500,
       headers: { 
         ...corsHeaders,
-        "Content-Type": "application/json" 
+        'Content-Type': 'application/json' 
       }
     });
   }
