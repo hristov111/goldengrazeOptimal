@@ -5,6 +5,7 @@ import { supabase } from "../lib/supabase";
 
 type Shipping = {
   name: string; 
+  email: string;
   phone: string;
   address1: string; 
   address2?: string;
@@ -73,6 +74,7 @@ export default function CheckoutForm() {
   const [sessionUserId, setSessionUserId] = useState<string | null>(null);
   const [shipping, setShipping] = useState<Shipping>({
     name: "", 
+    email: "",
     phone: "", 
     address1: "", 
     address2: "", 
@@ -130,6 +132,7 @@ export default function CheckoutForm() {
         
         setShipping({
           name: profile?.full_name || lastOrder?.shipping_name || user?.user_metadata?.full_name || "",
+          email: user?.email || "",
           phone: profile?.phone || lastOrder?.shipping_phone || "",
           address1: shippingAddr.address1 || lastOrder?.shipping_address1 || "",
           address2: shippingAddr.address2 || lastOrder?.shipping_address2 || "",
@@ -145,6 +148,7 @@ export default function CheckoutForm() {
         } else {
           setShipping({
             name: user?.user_metadata?.full_name || "",
+            email: user?.email || "",
             phone: "",
             address1: "",
             address2: "",
@@ -163,6 +167,7 @@ export default function CheckoutForm() {
             setShipping(prev => ({
               ...prev,
               name: user.user_metadata?.full_name || "",
+              email: user.email || "",
             }));
           }
         } catch (authErr) {
@@ -179,7 +184,7 @@ export default function CheckoutForm() {
   };
 
   const validateForm = () => {
-    const required = ['name', 'phone', 'address1', 'city', 'state', 'postal'];
+    const required = ['name', 'email', 'phone', 'address1', 'city', 'state', 'postal'];
     const missing = required.filter(field => !shipping[field as keyof Shipping]);
     
     if (missing.length > 0) {
@@ -348,6 +353,25 @@ export default function CheckoutForm() {
 
               {/* Email & Phone */}
               <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-stone-700 text-sm tracking-wider mb-2">
+                    EMAIL ADDRESS *
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Mail size={18} className="text-stone-400" />
+                    </div>
+                    <input
+                      type="email"
+                      value={shipping.email}
+                      onChange={(e) => update("email", e.target.value)}
+                      required
+                      className="w-full pl-10 pr-4 py-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-200 focus:border-amber-400 transition-colors"
+                      placeholder="your@email.com"
+                    />
+                  </div>
+                </div>
+
                 <div>
                   <label className="block text-stone-700 text-sm tracking-wider mb-2">
                     PHONE NUMBER *
