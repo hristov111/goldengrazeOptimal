@@ -70,6 +70,7 @@ Deno.serve(async (req: Request) => {
     }
 
     const PRODUCT = {
+    }
     const qty = Math.max(1, Number(body?.quantity ?? 1));
 
     // Validate shipping (US)
