@@ -1,16 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Package, Loader2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { database } from '../lib/supabase';
 import OrderCard from '../components/orders/OrderCard';
 import OrdersFilters from '../components/orders/OrdersFilters';
 
-interface OrdersPageProps {
-  setCurrentPage: (page: string) => void;
-  setSelectedOrder?: (orderNumber: string) => void;
-}
-
-const OrdersPage: React.FC<OrdersPageProps> = ({ setCurrentPage, setSelectedOrder }) => {
+const OrdersPage: React.FC = () => {
+  const navigate = useNavigate();
   const [orders, setOrders] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -24,7 +21,7 @@ const OrdersPage: React.FC<OrdersPageProps> = ({ setCurrentPage, setSelectedOrde
   useEffect(() => {
     // Redirect if not logged in
     if (!authLoading && !isLoggedIn) {
-      setCurrentPage('signin');
+      navigate('/signin');
       return;
     }
 
@@ -34,7 +31,7 @@ const OrdersPage: React.FC<OrdersPageProps> = ({ setCurrentPage, setSelectedOrde
       // Scroll to top when page loads
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-  }, [isLoggedIn, user, authLoading, setCurrentPage]);
+  }, [isLoggedIn, user, authLoading, navigate]);
 
   useEffect(() => {
     if (user) {
@@ -84,10 +81,7 @@ const OrdersPage: React.FC<OrdersPageProps> = ({ setCurrentPage, setSelectedOrde
   };
 
   const handleOrderClick = (orderNumber: string) => {
-    if (setSelectedOrder) {
-      setSelectedOrder(orderNumber);
-    }
-    setCurrentPage('order-detail');
+    navigate(`/order-detail/${orderNumber}`);
   };
 
   // Show loading state while checking authentication
@@ -124,7 +118,7 @@ const OrdersPage: React.FC<OrdersPageProps> = ({ setCurrentPage, setSelectedOrde
           isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
         }`}>
           <button
-            onClick={() => setCurrentPage('home')}
+            onClick={() => navigate('/')}
             className="flex items-center space-x-2 text-stone-600 hover:text-amber-600 transition-colors mb-8 group"
           >
             <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
@@ -204,7 +198,7 @@ const OrdersPage: React.FC<OrdersPageProps> = ({ setCurrentPage, setSelectedOrde
                 </p>
                 {!searchTerm && !selectedStatus && (
                   <button
-                    onClick={() => setCurrentPage('products')}
+                    onClick={() => navigate('/products')}
                     className="bg-amber-400 hover:bg-amber-500 text-white px-8 py-4 tracking-widest transition-all duration-300 rounded-lg font-medium transform hover:scale-105"
                   >
                     SHOP NOW
