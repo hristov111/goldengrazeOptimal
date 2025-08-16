@@ -34,6 +34,17 @@ export function useProductStock(productId: string | null): StockInfo {
         const { data, error } = await database.getProduct(productId);
         
         if (error) {
+          // Handle network errors gracefully
+          if (error.code === 'NETWORK_ERROR') {
+            setStockInfo({
+              isLoading: false,
+              stock: null,
+              isOutOfStock: false,
+              isLowStock: false
+            });
+            return;
+          }
+          
           setStockInfo({
             isLoading: false,
             stock: null,

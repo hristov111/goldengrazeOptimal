@@ -212,6 +212,16 @@ export const database = {
       
       return { data, error };
     } catch (error: any) {
+      // Handle network connectivity issues
+      if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
+        return { 
+          data: null, 
+          error: { 
+            message: 'Unable to connect to database. Please check your internet connection and try again.',
+            code: 'NETWORK_ERROR'
+          } 
+        };
+      }
       return { data: null, error: { message: error.message || 'Network error fetching product' } };
     }
   },
