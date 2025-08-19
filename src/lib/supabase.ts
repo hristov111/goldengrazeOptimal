@@ -55,6 +55,12 @@ const makeMockClient = () => ({
   rpc: () => ({ data: null, error: { message: 'Please connect to Supabase first' } })
 });
 
+// Add supabase export to database object for admin access
+const databaseWithSupabase = {
+  ...database,
+  supabase: mockClient
+};
+
 // Create mock client instance
 const mockClient = makeMockClient();
 
@@ -157,6 +163,7 @@ export const auth = {
 
 // Database helper functions
 export const database = {
+  supabase, // Add direct supabase access for admin operations
   // Profile functions (using profiles table, not users)
   getUserProfile: async (userId: string) => {
     try {

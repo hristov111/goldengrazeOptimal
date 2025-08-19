@@ -3,6 +3,8 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { CartProvider } from './contexts/CartContext';
 import { WishlistProvider } from './contexts/WishlistContext';
+import AdminRoute from './components/admin/AdminRoute';
+import AdminLayout from './components/admin/AdminLayout';
 import Navigation from './components/Navigation';
 import HomePage from './pages/HomePage';
 import Order from './pages/Order';
@@ -23,6 +25,12 @@ import HelpContactPage from './pages/HelpContactPage';
 import SupportTicketsPage from './pages/SupportTicketsPage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import TermsOfServicePage from './pages/TermsOfServicePage';
+import Dashboard from './pages/admin/Dashboard';
+import Orders from './pages/admin/Orders';
+import Products from './pages/admin/Products';
+import Customers from './pages/admin/Customers';
+import Analytics from './pages/admin/Analytics';
+import Coupons from './pages/admin/Coupons';
 
 // App content component that has access to auth context
 const AppContent: React.FC = () => {
@@ -71,6 +79,20 @@ const AppContent: React.FC = () => {
         <Route path="/support-tickets" element={<SupportTicketsPage />} />
         <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
         <Route path="/terms-of-service" element={<TermsOfServicePage />} />
+        
+        {/* Admin Routes */}
+        <Route path="/admin" element={
+          <AdminRoute>
+            <AdminLayout />
+          </AdminRoute>
+        }>
+          <Route index element={<Dashboard />} />
+          <Route path="orders" element={<Orders />} />
+          <Route path="products" element={<Products />} />
+          <Route path="customers" element={<Customers />} />
+          <Route path="analytics" element={<Analytics />} />
+          <Route path="coupons" element={<Coupons />} />
+        </Route>
       </Routes>
     </div>
   );
