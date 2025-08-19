@@ -3,7 +3,6 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { ShoppingBag, Menu, X, ChevronDown, Heart } from 'lucide-react';
 import { useSessionUser } from '../lib/hooks/useSessionUser';
 import { database } from '../lib/supabase';
-import { useIsAdmin } from '../lib/hooks/useIsAdmin';
 
 interface NavigationProps {
   isLoggedIn: boolean;
@@ -28,7 +27,8 @@ const Navigation: React.FC<NavigationProps> = ({
   const [cartCount, setCartCount] = useState(0);
   const [wishlistCount, setWishlistCount] = useState(0);
   const { user: sessionUser } = useSessionUser();
-  const { isAdmin } = useIsAdmin();
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isCheckingAdmin, setIsCheckingAdmin] = useState(false);
 
   // Fetch cart and wishlist counts
   useEffect(() => {
@@ -61,6 +61,37 @@ const Navigation: React.FC<NavigationProps> = ({
       window.removeEventListener('cartChanged', handleCartChange);
     };
   }, [sessionUser]);
+
+  // Check admin status from database
+  useEffect(() => {
+    if (sessionUser) {
+      checkAdminStatus();
+    } else {
+      setIsAdmin(false);
+    }
+  }, [sessionUser]);
+
+  const checkAdminStatus = async () => {
+    if (!sessionUser) return;
+    
+    setIsCheckingAdmin(true);
+    try {
+      const { data, error } = await database.getUserProfile(sessionUser.id);
+      
+      if (error) {
+        console.error('Failed to check admin status:', error);
+        setIsAdmin(false);
+        return;
+      }
+      
+      setIsAdmin(data?.is_admin || false);
+    } catch (error) {
+      console.error('Error checking admin status:', error);
+      setIsAdmin(false);
+    } finally {
+      setIsCheckingAdmin(false);
+    }
+  };
 
   const fetchCounts = async () => {
     if (!sessionUser) return;
@@ -306,7 +337,6 @@ const Navigation: React.FC<NavigationProps> = ({
                     {/* Menu Items */}
                     {[
                       ...(isAdmin ? [{ name: 'Admin Dashboard', icon: '⚙️', action: () => navigate('/admin') }] : []),
-                     ...(isAdmin ? [{ name: 'Admin Dashboard', icon: '⚙️', action: () => navigate('/admin') }] : []),
                       { name: 'My Orders', icon: '📦' },
                       { name: 'Account Settings', icon: '⚙️' },
                       { name: 'Wishlist', icon: '❤️', action: () => navigate('/wishlist') },
@@ -508,6 +538,17 @@ const Navigation: React.FC<NavigationProps> = ({
                   <div className="text-amber-400 font-medium mb-2">{user.name}</div>
                   <div className="flex flex-col space-y-2 text-sm">
                     {/* Mobile Admin Dashboard */}
+                    {isAdmin && (
+                      <button 
+                        onClick={() => {
+                          navigate('/admin');
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className="text-amber-200 hover:text-amber-400 transition-colors text-left"
+                      >
+                        Admin Dashboard
+                      </button>
+                    )}
                     <button 
                       onClick={() => {
                         navigate('/orders');
