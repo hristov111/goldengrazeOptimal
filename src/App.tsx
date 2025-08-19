@@ -9,8 +9,6 @@ import AdminRoute from './components/admin/AdminRoute';
 import AdminLayout from './components/admin/AdminLayout';
 import Navigation from './components/Navigation';
 import HomePage from './pages/HomePage';
-import Order from './pages/Order';
-import ProductPage from './pages/ProductPage';
 import ProductsPage from './pages/ProductsPage';
 import CartPage from './pages/CartPage';
 import WishlistPage from './pages/WishlistPage';
@@ -65,14 +63,7 @@ const AppContent: React.FC = () => {
             <Footer />
           </div>
         } />
-        <Route path="/order" element={<Order />} />
         <Route path="/checkout" element={<CheckoutPage />} />
-        <Route path="/product" element={
-          <div>
-            <ProductPage />
-            <Footer />
-          </div>
-        } />
         <Route path="/products/:slug" element={<ProductDetailPage />} />
         <Route path="/products" element={
           <div>

@@ -326,7 +326,7 @@ const Navigation: React.FC<NavigationProps> = ({ isLoggedIn, user, onSignOut }) 
                       <div className="text-amber-200 text-sm mb-2">No products available</div>
                       <button
                         onClick={() => {
-                          navigate('/products');
+                          navigate(`/products/${product.slug}`);
                           setIsProductsHovered(false);
                         }}
                         className="text-amber-400 hover:text-amber-300 text-xs underline"
