@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { ShoppingBag, Menu, X, ChevronDown, Heart } from 'lucide-react';
 import { useSessionUser } from '../lib/hooks/useSessionUser';
 import { database } from '../lib/supabase';
+import { useIsAdmin } from '../lib/hooks/useIsAdmin';
 
 interface NavigationProps {
   isLoggedIn: boolean;
@@ -27,6 +28,7 @@ const Navigation: React.FC<NavigationProps> = ({
   const [cartCount, setCartCount] = useState(0);
   const [wishlistCount, setWishlistCount] = useState(0);
   const { user: sessionUser } = useSessionUser();
+  const { isAdmin } = useIsAdmin();
 
   // Fetch cart and wishlist counts
   useEffect(() => {
@@ -300,6 +302,7 @@ const Navigation: React.FC<NavigationProps> = ({
                     
                     {/* Menu Items */}
                     {[
+                      ...(isAdmin ? [{ name: 'Admin Dashboard', icon: '⚙️', action: () => navigate('/admin') }] : []),
                       { name: 'My Orders', icon: '📦' },
                       { name: 'Account Settings', icon: '⚙️' },
                       { name: 'Wishlist', icon: '❤️', action: () => navigate('/wishlist') },
@@ -345,7 +348,7 @@ const Navigation: React.FC<NavigationProps> = ({
                             : 'translate-x-4 opacity-0'
                         }`}
                         style={{ 
-                          transitionDelay: isUserDropdownOpen ? '200ms' : '0ms' 
+                          transitionDelay: isUserDropdownOpen ? `${(isAdmin ? 6 : 5) * 50}ms` : '0ms' 
                         }}
                       >
                         <div className="flex items-center space-x-3">
@@ -500,6 +503,17 @@ const Navigation: React.FC<NavigationProps> = ({
                 <div className="mt-4 pt-4 border-t border-amber-400/20">
                   <div className="text-amber-400 font-medium mb-2">{user.name}</div>
                   <div className="flex flex-col space-y-2 text-sm">
+                    {isAdmin && (
+                      <button 
+                        onClick={() => {
+                          navigate('/admin');
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className="text-amber-200 hover:text-amber-400 transition-colors text-left"
+                      >
+                        Admin Dashboard
+                      </button>
+                    )}
                     <button 
                       onClick={() => {
                         navigate('/orders');
