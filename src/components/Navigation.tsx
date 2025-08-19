@@ -76,9 +76,10 @@ const Navigation: React.FC<NavigationProps> = ({
     
     console.log('🔍 Checking admin status for user:', sessionUser.id);
     setIsCheckingAdmin(true);
+    let profileData = null;
+    
     try {
-      // First check if profile exists, if not create it
-      let { data, error } = await database.getUserProfile(sessionUser.id);
+      const { data, error } = await database.getUserProfile(sessionUser.id);
       
       if (error) {
         console.error('❌ Failed to check admin status:', error);
@@ -86,38 +87,17 @@ const Navigation: React.FC<NavigationProps> = ({
         return;
       }
       
-      // If profile doesn't exist, create it
-      if (!data) {
-        console.log('📝 Profile not found, creating profile for user:', sessionUser.id);
-        const { data: newProfile, error: createError } = await database.supabase
-          .from('profiles')
-          .insert({
-            id: sessionUser.id,
-            full_name: user?.name || 'User',
-            is_admin: false
-          })
-          .select()
-          .single();
-        
-        if (createError) {
-          console.error('❌ Failed to create profile:', createError);
-          setIsAdmin(false);
-          return;
-        }
-        
-        data = newProfile;
-        console.log('✅ Created new profile:', data);
-      }
+      profileData = data;
       
-      console.log('📊 Profile data:', data);
-      console.log('🔐 Is admin:', data?.is_admin);
-      setIsAdmin(data?.is_admin || false);
+      console.log('📊 Profile data:', profileData);
+      console.log('🔐 Is admin:', profileData?.is_admin);
+      setIsAdmin(profileData?.is_admin || false);
     } catch (error) {
       console.error('Error checking admin status:', error);
       setIsAdmin(false);
     } finally {
       setIsCheckingAdmin(false);
-      console.log('✅ Admin check complete. Final isAdmin state will be:', data?.is_admin || false);
+      console.log('✅ Admin check complete. Final isAdmin state will be:', profileData?.is_admin || false);
     }
   };
 
