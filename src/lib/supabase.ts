@@ -55,10 +55,6 @@ const makeMockClient = () => ({
   rpc: () => ({ data: null, error: { message: 'Please connect to Supabase first' } })
 });
 
-// Add supabase export to database object for admin access
-const databaseWithSupabase = {
-  ...database,
-}
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
@@ -66,7 +62,7 @@ let supabase: any;
 
 if (!supabaseUrl || !supabaseAnonKey || supabaseUrl === 'your_supabase_url' || supabaseAnonKey === 'your_supabase_anon_key') {
   console.warn('Missing Supabase environment variables. Please connect to Supabase to enable full functionality.')
-  supabase = mockClient;
+  supabase = makeMockClient();
 } else {
   try {
     supabase = createClient(supabaseUrl, supabaseAnonKey, {
@@ -85,7 +81,7 @@ if (!supabaseUrl || !supabaseAnonKey || supabaseUrl === 'your_supabase_url' || s
   } catch (error) {
     console.error('Failed to initialize Supabase client:', error);
     // Fall back to mock client if initialization fails  
-    supabase = mockClient;
+    supabase = makeMockClient();
   }
 }
 
