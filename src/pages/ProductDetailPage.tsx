@@ -25,6 +25,8 @@ export default function ProductDetailPage() {
   });
 
   const handleAddToCart = async () => {
+    if (product.stock_quantity === 0) return;
+    
     if (!user) {
       navigate('/signin');
       return;
@@ -69,6 +71,8 @@ export default function ProductDetailPage() {
   };
 
   const handleBuyNow = () => {
+    if (product.stock_quantity === 0) return;
+    
     // Navigate to checkout with this product
     navigate('/checkout', { state: { productId: product?.id, quantity } });
   };
@@ -320,6 +324,40 @@ export default function ProductDetailPage() {
             {/* Price */}
             <div className="text-3xl font-serif text-stone-900">${price}</div>
 
+            {/* Stock Status */}
+            <div className="bg-white/80 backdrop-blur-sm rounded-lg p-4 border border-amber-100">
+              <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-2">
+                  {product.stock_quantity === null ? (
+                    <>
+                      <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
+                      <span className="text-stone-600 font-medium">Stock status unknown</span>
+                    </>
+                  ) : product.stock_quantity === 0 ? (
+                    <>
+                      <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                      <span className="text-red-600 font-medium">Out of stock</span>
+                    </>
+                  ) : product.stock_quantity <= 5 ? (
+                    <>
+                      <div className="w-3 h-3 bg-orange-500 rounded-full animate-pulse"></div>
+                      <span className="text-orange-600 font-medium">Only {product.stock_quantity} left in stock</span>
+                    </>
+                  ) : product.stock_quantity <= 20 ? (
+                    <>
+                      <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                      <span className="text-yellow-600 font-medium">{product.stock_quantity} in stock</span>
+                    </>
+                  ) : (
+                    <>
+                      <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                      <span className="text-green-600 font-medium">{product.stock_quantity} in stock</span>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+
             {/* Short Description */}
             {product.short_description && (
               <p className="text-lg text-stone-700 leading-relaxed">
@@ -358,27 +396,35 @@ export default function ProductDetailPage() {
               {/* Buy Now Button */}
               <button
                 onClick={handleBuyNow}
-                className="w-full bg-amber-400 hover:bg-amber-500 text-white py-4 px-6 tracking-widest transition-all duration-300 rounded-lg font-medium flex items-center justify-center space-x-2 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                className={`w-full py-4 px-6 tracking-widest transition-all duration-300 rounded-lg font-medium flex items-center justify-center space-x-2 shadow-lg ${
+                  product.stock_quantity === 0
+                    ? 'bg-stone-400 text-stone-600 cursor-not-allowed'
+                    : 'bg-amber-400 hover:bg-amber-500 text-white transform hover:scale-105 hover:shadow-xl'
+                }`}
               >
                 <ShoppingBag size={20} />
-                <span>BUY NOW</span>
+                <span>{product.stock_quantity === 0 ? 'OUT OF STOCK' : 'BUY NOW'}</span>
               </button>
 
               {/* Add to Cart Button */}
               <button
                 onClick={handleAddToCart}
                 disabled={isAddingToCart}
-                className="w-full border-2 border-amber-400 text-amber-700 hover:bg-amber-50 disabled:bg-stone-100 disabled:cursor-not-allowed py-3 px-6 tracking-widest transition-all duration-300 rounded-lg font-medium flex items-center justify-center space-x-2"
+                className={`w-full border-2 transition-all duration-300 rounded-lg font-medium flex items-center justify-center space-x-2 py-3 px-6 tracking-widest ${
+                  product.stock_quantity === 0 
+                    ? 'border-stone-300 text-stone-500 bg-stone-100 cursor-not-allowed' 
+                    : 'border-amber-400 text-amber-700 hover:bg-amber-50 disabled:bg-stone-100 disabled:cursor-not-allowed'
+                }`}
               >
                 {isAddingToCart ? (
                   <>
                     <Loader2 size={20} className="animate-spin" />
-                    <span>ADDING TO CART...</span>
+                    <span>ADDING...</span>
                   </>
                 ) : (
                   <>
                     <ShoppingBag size={20} />
-                    <span>ADD TO CART</span>
+                    <span>{product.stock_quantity === 0 ? 'OUT OF STOCK' : 'ADD TO CART'}</span>
                   </>
                 )}
               </button>

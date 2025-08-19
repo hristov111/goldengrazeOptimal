@@ -23,6 +23,8 @@ export default function ProductCard({ product }: ProductCardProps) {
     e.preventDefault();
     e.stopPropagation();
     
+    if (product.stock_quantity === 0) return;
+    
     if (!user) {
       setShowAuthModal(true);
       return;
@@ -69,6 +71,8 @@ export default function ProductCard({ product }: ProductCardProps) {
     e.preventDefault();
     e.stopPropagation();
     
+    if (product.stock_quantity === 0) return;
+    
     // Navigate to checkout with this product
     navigate('/checkout', { state: { productId: product.id, quantity: 1 } });
   };
@@ -99,6 +103,19 @@ export default function ProductCard({ product }: ProductCardProps) {
               <Heart size={14} className="text-stone-600 hover:text-red-500 transition-colors" />
             )}
           </button>
+          
+          {/* Stock Status */}
+          <div className="mt-2">
+            {product.stock_quantity === null ? (
+              <span className="text-xs text-stone-500">Stock: Unknown</span>
+            ) : product.stock_quantity === 0 ? (
+              <span className="text-xs text-red-600 font-medium">Out of Stock</span>
+            ) : product.stock_quantity <= 5 ? (
+              <span className="text-xs text-orange-600 font-medium">Only {product.stock_quantity} left</span>
+            ) : (
+              <span className="text-xs text-green-600 font-medium">{product.stock_quantity} in stock</span>
+            )}
+          </div>
         </div>
 
         {/* Product Details */}
@@ -140,17 +157,25 @@ export default function ProductCard({ product }: ProductCardProps) {
         {/* Buy Now Button */}
         <button
           onClick={handleBuyNow}
-          className="w-full bg-amber-400 hover:bg-amber-500 text-white py-3 px-4 tracking-widest transition-all duration-300 rounded-lg font-medium flex items-center justify-center space-x-2 transform hover:scale-105 shadow-lg hover:shadow-xl"
+          className={`w-full py-3 px-4 tracking-widest transition-all duration-300 rounded-lg font-medium flex items-center justify-center space-x-2 shadow-lg ${
+            product.stock_quantity === 0
+              ? 'bg-stone-400 text-stone-600 cursor-not-allowed'
+              : 'bg-amber-400 hover:bg-amber-500 text-white transform hover:scale-105 hover:shadow-xl'
+          }`}
         >
           <ShoppingBag size={16} />
-          <span>BUY NOW</span>
+          <span>{product.stock_quantity === 0 ? 'OUT OF STOCK' : 'BUY NOW'}</span>
         </button>
 
         {/* Add to Cart Button */}
         <button
           onClick={handleAddToCart}
           disabled={isAddingToCart}
-          className="w-full border-2 border-amber-400 text-amber-700 hover:bg-amber-50 disabled:bg-stone-100 disabled:cursor-not-allowed py-2 px-4 tracking-widest transition-all duration-300 rounded-lg font-medium flex items-center justify-center space-x-2"
+          className={`w-full border-2 transition-all duration-300 rounded-lg font-medium flex items-center justify-center space-x-2 py-2 px-4 tracking-widest ${
+            product.stock_quantity === 0 
+              ? 'border-stone-300 text-stone-500 bg-stone-100 cursor-not-allowed' 
+              : 'border-amber-400 text-amber-700 hover:bg-amber-50 disabled:bg-stone-100 disabled:cursor-not-allowed'
+          }`}
         >
           {isAddingToCart ? (
             <>
@@ -160,7 +185,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           ) : (
             <>
               <ShoppingBag size={14} />
-              <span className="text-sm">ADD TO CART</span>
+              <span className="text-sm">{product.stock_quantity === 0 ? 'OUT OF STOCK' : 'ADD TO CART'}</span>
             </>
           )}
         </button>

@@ -11,6 +11,7 @@ export type Product = {
   category: string | null;
   is_active: boolean;
   created_at: string;
+  stock_quantity: number | null;
 };
 
 export type ProductImage = {
@@ -41,7 +42,7 @@ export async function listProducts(params?: {
   let query = supabase
     .from("products")
     .select(`
-      *,
+      id, slug, name, price_cents, short_description, description, images, category, is_active, created_at, stock_quantity,
       product_images!inner(
         id, storage_path, public_url, alt, sort_order, is_primary
       )
@@ -102,7 +103,7 @@ export async function getProductBySlug(slug: string): Promise<ProductWithImages>
   const { data, error } = await supabase
     .from("products")
     .select(`
-      *,
+      id, slug, name, price_cents, short_description, description, images, category, is_active, created_at, stock_quantity,
       product_images(
         id, storage_path, public_url, alt, sort_order, is_primary, created_at
       )
