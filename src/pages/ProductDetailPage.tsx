@@ -1,21 +1,21 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Star, Heart, ShoppingBag, Loader2, AlertCircle, Package, Truck, Shield } from 'lucide-react';
+import { ArrowLeft, Star, Heart, ShoppingBag, Loader2, AlertCircle, Package, Truck, Shield, Plus, Minus, ZoomIn, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getProductBySlug } from "../api/products";
 import SEO from "../components/SEO";
 import { useSessionUser } from '../lib/hooks/useSessionUser';
 import { database } from '../lib/supabase';
-import AuthModal from '../components/AuthModal';
 
 export default function ProductDetailPage() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const [quantity, setQuantity] = useState(1);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showLightbox, setShowLightbox] = useState(false);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [isAddingToWishlist, setIsAddingToWishlist] = useState(false);
+  const [activeTab, setActiveTab] = useState('description');
   const { user } = useSessionUser();
 
   const { data: product, isLoading, isError } = useQuery({
@@ -26,7 +26,7 @@ export default function ProductDetailPage() {
 
   const handleAddToCart = async () => {
     if (!user) {
-      setShowAuthModal(true);
+      navigate('/signin');
       return;
     }
 
@@ -48,7 +48,7 @@ export default function ProductDetailPage() {
 
   const handleAddToWishlist = async () => {
     if (!user) {
-      setShowAuthModal(true);
+      navigate('/signin');
       return;
     }
 
@@ -66,6 +66,86 @@ export default function ProductDetailPage() {
     } finally {
       setIsAddingToWishlist(false);
     }
+  };
+
+  const handleBuyNow = () => {
+    // Navigate to checkout with this product
+    navigate('/checkout', { state: { productId: product?.id, quantity } });
+  };
+
+  // Lightbox component
+  const Lightbox = () => {
+    if (!showLightbox || !product) return null;
+
+    const images = product.product_images || [];
+    const currentImage = images[selectedImageIndex];
+
+    return (
+      <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4">
+        {/* Close button */}
+        <button 
+          className="absolute top-4 right-4 z-10 w-12 h-12 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors"
+          onClick={() => setShowLightbox(false)}
+        >
+          <X size={24} />
+        </button>
+
+        {/* Navigation buttons */}
+        {images.length > 1 && (
+          <>
+            <button 
+              className="absolute left-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors disabled:opacity-50"
+              onClick={() => setSelectedImageIndex(Math.max(0, selectedImageIndex - 1))}
+              disabled={selectedImageIndex === 0}
+            >
+              <ChevronLeft size={24} />
+            </button>
+            
+            <button 
+              className="absolute right-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors disabled:opacity-50"
+              onClick={() => setSelectedImageIndex(Math.min(images.length - 1, selectedImageIndex + 1))}
+              disabled={selectedImageIndex === images.length - 1}
+            >
+              <ChevronRight size={24} />
+            </button>
+          </>
+        )}
+
+        {/* Main image */}
+        <div className="max-w-4xl w-full">
+          {currentImage && (
+            <img 
+              src={currentImage.public_url || currentImage.storage_path || '/product_images/golden_graze1.png'} 
+              className="w-full h-auto max-h-[80vh] object-contain rounded-xl shadow-2xl" 
+              alt={currentImage.alt || product.name}
+            />
+          )}
+        </div>
+
+        {/* Thumbnail strip */}
+        {images.length > 1 && (
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 max-w-md overflow-x-auto">
+            {images.map((img, i) => (
+              <button
+                key={img.id}
+                className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${
+                  i === selectedImageIndex 
+                    ? 'border-amber-400 opacity-100' 
+                    : 'border-white/30 opacity-60 hover:opacity-80'
+                }`}
+                onClick={() => setSelectedImageIndex(i)}
+              >
+                <img 
+                  src={img.public_url || img.storage_path || '/product_images/golden_graze1.png'} 
+                  className="w-full h-full object-cover" 
+                  alt={img.alt || `Thumbnail ${i + 1}`}
+                />
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    );
   };
 
   if (isLoading) {
@@ -106,18 +186,26 @@ export default function ProductDetailPage() {
   }
 
   const price = (product.price_cents / 100).toFixed(2);
-  const primaryImage = product.images?.[0];
+  const images = product.product_images || [];
+  const currentImage = images[selectedImageIndex] || { 
+    public_url: '/product_images/golden_graze1.png', 
+    alt: product.name 
+  };
+
+  const tabs = [
+    { id: 'description', name: 'Description' },
+    { id: 'ingredients', name: 'Ingredients' },
+    { id: 'usage', name: 'How to Use' },
+    { id: 'reviews', name: 'Reviews (127)' }
+  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50/30 to-stone-100 pt-20">
       <SEO
         title={product.name}
         description={product.short_description || product.description || `${product.name} - Premium tallow skincare from Golden Graze`}
-        image={primaryImage}
+        image={currentImage.public_url || currentImage.storage_path}
         url={`/products/${product.slug}`}
-        type="product"
-        price={price}
-        availability="in_stock"
       />
 
       <div className="max-w-7xl mx-auto px-6 py-8">
@@ -143,39 +231,52 @@ export default function ProductDetailPage() {
           {/* Product Images */}
           <div className="space-y-4">
             {/* Main Image */}
-            <div className="aspect-square bg-gradient-to-br from-amber-100 to-amber-200 rounded-2xl overflow-hidden shadow-xl">
-              {primaryImage ? (
+            <div className="relative group">
+              <button
+                onClick={() => setShowLightbox(true)}
+                className="w-full aspect-square bg-gradient-to-br from-amber-100 to-amber-200 rounded-2xl overflow-hidden shadow-xl border border-amber-200 hover:border-amber-400 transition-all duration-300 relative"
+              >
                 <img 
-                  src={product.images[selectedImageIndex] || primaryImage} 
-                  alt={product.name} 
-                  className="w-full h-full object-cover"
+                  src={currentImage.public_url || currentImage.storage_path || '/product_images/golden_graze1.png'} 
+                  alt={currentImage.alt || product.name} 
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   onError={(e) => {
                     e.currentTarget.src = '/product_images/golden_graze1.png';
                   }}
                 />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <Package size={64} className="text-amber-600" />
+                
+                {/* Zoom overlay */}
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
+                  <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <ZoomIn size={20} className="text-stone-700" />
+                  </div>
                 </div>
-              )}
+                
+                {/* Image counter */}
+                {images.length > 1 && (
+                  <div className="absolute top-4 right-4 bg-black/60 text-white text-xs px-2 py-1 rounded-full">
+                    {selectedImageIndex + 1} / {images.length}
+                  </div>
+                )}
+              </button>
             </div>
 
             {/* Thumbnail Gallery */}
-            {product.images.length > 1 && (
-              <div className="grid grid-cols-4 gap-2">
-                {product.images.map((image, index) => (
+            {images.length > 1 && (
+              <div className="grid grid-cols-5 gap-2">
+                {images.map((image, index) => (
                   <button
-                    key={index}
+                    key={image.id}
                     onClick={() => setSelectedImageIndex(index)}
-                    className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${
+                    className={`aspect-square rounded-lg overflow-hidden border-2 transition-all duration-300 ${
                       selectedImageIndex === index 
                         ? 'border-amber-400 ring-2 ring-amber-200' 
-                        : 'border-stone-200 hover:border-amber-300'
+                        : 'border-stone-200 hover:border-amber-300 opacity-80 hover:opacity-100'
                     }`}
                   >
                     <img 
-                      src={image} 
-                      alt={`${product.name} view ${index + 1}`}
+                      src={image.public_url || image.storage_path || '/product_images/golden_graze1.png'} 
+                      alt={image.alt || `${product.name} view ${index + 1}`}
                       className="w-full h-full object-cover"
                     />
                   </button>
@@ -225,7 +326,7 @@ export default function ProductDetailPage() {
                     disabled={quantity <= 1}
                     className="px-4 py-2 hover:bg-stone-50 disabled:bg-stone-50 disabled:cursor-not-allowed transition-colors"
                   >
-                    -
+                    <Minus size={16} />
                   </button>
                   <span className="px-4 py-2 min-w-[3rem] text-center font-medium text-stone-900">
                     {quantity}
@@ -234,18 +335,29 @@ export default function ProductDetailPage() {
                     onClick={() => setQuantity(quantity + 1)}
                     className="px-4 py-2 hover:bg-stone-50 transition-colors"
                   >
-                    +
+                    <Plus size={16} />
                   </button>
                 </div>
+                <span className="text-stone-600 text-sm">In stock</span>
               </div>
             </div>
 
             {/* Action Buttons */}
             <div className="space-y-4">
+              {/* Buy Now Button */}
+              <button
+                onClick={handleBuyNow}
+                className="w-full bg-amber-400 hover:bg-amber-500 text-white py-4 px-6 tracking-widest transition-all duration-300 rounded-lg font-medium flex items-center justify-center space-x-2 transform hover:scale-105 shadow-lg hover:shadow-xl"
+              >
+                <ShoppingBag size={20} />
+                <span>BUY NOW</span>
+              </button>
+
+              {/* Add to Cart Button */}
               <button
                 onClick={handleAddToCart}
                 disabled={isAddingToCart}
-                className="w-full bg-amber-400 hover:bg-amber-500 disabled:bg-amber-300 text-white py-4 px-6 tracking-widest transition-all duration-300 rounded-lg font-medium flex items-center justify-center space-x-2"
+                className="w-full border-2 border-amber-400 text-amber-700 hover:bg-amber-50 disabled:bg-stone-100 disabled:cursor-not-allowed py-3 px-6 tracking-widest transition-all duration-300 rounded-lg font-medium flex items-center justify-center space-x-2"
               >
                 {isAddingToCart ? (
                   <>
@@ -260,10 +372,11 @@ export default function ProductDetailPage() {
                 )}
               </button>
 
+              {/* Add to Wishlist Button */}
               <button
                 onClick={handleAddToWishlist}
                 disabled={isAddingToWishlist}
-                className="w-full border-2 border-amber-400 text-amber-700 hover:bg-amber-50 disabled:bg-stone-100 py-3 px-6 tracking-widest transition-all duration-300 rounded-lg font-medium flex items-center justify-center space-x-2"
+                className="w-full border-2 border-stone-300 text-stone-700 hover:bg-stone-50 disabled:bg-stone-100 disabled:cursor-not-allowed py-3 px-6 tracking-widest transition-all duration-300 rounded-lg font-medium flex items-center justify-center space-x-2"
               >
                 {isAddingToWishlist ? (
                   <>
@@ -297,34 +410,117 @@ export default function ProductDetailPage() {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
 
-            {/* Full Description */}
-            {product.description && (
-              <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-amber-100">
-                <h3 className="font-serif text-lg text-stone-900 mb-4">Description</h3>
-                <div 
-                  className="prose prose-stone max-w-none text-stone-700 leading-relaxed"
-                  dangerouslySetInnerHTML={{ __html: product.description }}
-                />
-              </div>
-            )}
+        {/* Tabbed Information */}
+        <div className="mt-16">
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-amber-100 overflow-hidden">
+            {/* Tab Headers */}
+            <div className="flex border-b border-stone-200">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex-1 py-4 px-6 text-sm font-medium tracking-wider transition-all duration-300 ${
+                    activeTab === tab.id
+                      ? 'bg-amber-50 text-amber-700 border-b-2 border-amber-400'
+                      : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'
+                  }`}
+                >
+                  {tab.name}
+                </button>
+              ))}
+            </div>
+
+            {/* Tab Content */}
+            <div className="p-8">
+              {activeTab === 'description' && (
+                <div className="prose prose-stone max-w-none">
+                  {product.description ? (
+                    <div dangerouslySetInnerHTML={{ __html: product.description }} />
+                  ) : (
+                    <p className="text-stone-700 leading-relaxed">
+                      Experience the transformative power of our ancestrally inspired tallow balm. 
+                      Crafted with grass-fed beef tallow and organic botanicals, this luxurious 
+                      skincare ritual connects you with nature's most nourishing ingredients.
+                    </p>
+                  )}
+                </div>
+              )}
+              
+              {activeTab === 'ingredients' && (
+                <div className="space-y-4">
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div>
+                      <h4 className="font-medium text-stone-900 mb-2">Primary Ingredients</h4>
+                      <ul className="space-y-2 text-stone-700">
+                        <li>• Grass-fed beef tallow (rich in vitamins A, D, E, K)</li>
+                        <li>• Organic jojoba oil</li>
+                        <li>• Cold-pressed rosehip oil</li>
+                        <li>• Organic coconut oil</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-stone-900 mb-2">Benefits</h4>
+                      <ul className="space-y-2 text-stone-700">
+                        <li>• Deep moisturization</li>
+                        <li>• Skin barrier restoration</li>
+                        <li>• Anti-aging properties</li>
+                        <li>• Natural sun protection</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {activeTab === 'usage' && (
+                <div>
+                  <h4 className="font-medium text-stone-900 mb-4">How to Use</h4>
+                  <ol className="space-y-3 text-stone-700">
+                    <li className="flex items-start space-x-3">
+                      <span className="flex-shrink-0 w-6 h-6 bg-amber-400 text-white text-xs font-bold rounded-full flex items-center justify-center">1</span>
+                      <span>Cleanse your skin with warm water and pat dry</span>
+                    </li>
+                    <li className="flex items-start space-x-3">
+                      <span className="flex-shrink-0 w-6 h-6 bg-amber-400 text-white text-xs font-bold rounded-full flex items-center justify-center">2</span>
+                      <span>Take a small amount with the included wooden spoon</span>
+                    </li>
+                    <li className="flex items-start space-x-3">
+                      <span className="flex-shrink-0 w-6 h-6 bg-amber-400 text-white text-xs font-bold rounded-full flex items-center justify-center">3</span>
+                      <span>Warm between your palms until it melts</span>
+                    </li>
+                    <li className="flex items-start space-x-3">
+                      <span className="flex-shrink-0 w-6 h-6 bg-amber-400 text-white text-xs font-bold rounded-full flex items-center justify-center">4</span>
+                      <span>Gently massage into skin using upward motions</span>
+                    </li>
+                    <li className="flex items-start space-x-3">
+                      <span className="flex-shrink-0 w-6 h-6 bg-amber-400 text-white text-xs font-bold rounded-full flex items-center justify-center">5</span>
+                      <span>Breathe deeply and embrace the ritual</span>
+                    </li>
+                  </ol>
+                </div>
+              )}
+              
+              {activeTab === 'reviews' && (
+                <div className="text-center py-8">
+                  <Star size={48} className="text-amber-400 mx-auto mb-4" />
+                  <h4 className="font-serif text-xl text-stone-900 mb-2">Customer Reviews</h4>
+                  <p className="text-stone-600 mb-6">
+                    See what our community is saying about this product.
+                  </p>
+                  <button className="bg-amber-400 hover:bg-amber-500 text-white px-6 py-3 tracking-widest transition-colors rounded-lg">
+                    VIEW ALL REVIEWS
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Authentication Modal */}
-      <AuthModal
-        isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
-        onSignIn={() => {
-          setShowAuthModal(false);
-          navigate('/signin');
-        }}
-        onSignUp={() => {
-          setShowAuthModal(false);
-          navigate('/signup');
-        }}
-      />
+      {/* Lightbox */}
+      <Lightbox />
     </div>
   );
 }

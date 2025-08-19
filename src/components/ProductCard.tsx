@@ -1,26 +1,76 @@
-import React from 'react';
-import { Link } from "react-router-dom";
-import { Star, Heart } from 'lucide-react';
+import React, { useState } from 'react';
+import { Link, useNavigate } from "react-router-dom";
+import { Star, Heart, ShoppingBag, Loader2 } from 'lucide-react';
 import type { Product } from "../api/products";
+import { useSessionUser } from '../lib/hooks/useSessionUser';
+import { database } from '../lib/supabase';
 
 interface ProductCardProps {
   product: Product;
-  onWishlistToggle?: (product: Product) => void;
-  isInWishlist?: boolean;
 }
 
-export default function ProductCard({ 
-  product, 
-  onWishlistToggle, 
-  isInWishlist = false 
-}: ProductCardProps) {
-  const primaryImage = product.images?.[0];
+export default function ProductCard({ product }: ProductCardProps) {
+  const navigate = useNavigate();
+  const { user } = useSessionUser();
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [isAddingToWishlist, setIsAddingToWishlist] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+
+  const primaryImage = product.images?.[0] || '/product_images/golden_graze1.png';
   const price = (product.price_cents / 100).toFixed(2);
 
-  const handleWishlistClick = (e: React.MouseEvent) => {
+  const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    onWishlistToggle?.(product);
+    
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
+
+    setIsAddingToCart(true);
+    try {
+      const { error } = await database.addToCart(user.id, product.id, 1);
+      if (error) throw error;
+      
+      // Notify navigation to update counter
+      window.dispatchEvent(new CustomEvent('cartChanged'));
+    } catch (error: any) {
+      console.error('Failed to add to cart:', error);
+    } finally {
+      setIsAddingToCart(false);
+    }
+  };
+
+  const handleAddToWishlist = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
+
+    setIsAddingToWishlist(true);
+    try {
+      const { error } = await database.addToWishlist(user.id, product.id);
+      if (error) throw error;
+      
+      // Notify navigation to update counter
+      window.dispatchEvent(new CustomEvent('wishlistChanged'));
+    } catch (error: any) {
+      console.error('Failed to add to wishlist:', error);
+    } finally {
+      setIsAddingToWishlist(false);
+    }
+  };
+
+  const handleBuyNow = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Navigate to checkout with this product
+    navigate('/checkout', { state: { productId: product.id, quantity: 1 } });
   };
 
   return (
@@ -28,35 +78,27 @@ export default function ProductCard({
       <Link to={`/products/${product.slug}`} className="block">
         {/* Product Image */}
         <div className="aspect-square bg-gradient-to-br from-amber-100 to-amber-200 overflow-hidden relative">
-          {primaryImage ? (
-            <img 
-              src={primaryImage} 
-              alt={product.name} 
-              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-              onError={(e) => {
-                e.currentTarget.src = '/product_images/golden_graze1.png';
-              }}
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <div className="text-amber-600 text-4xl">📦</div>
-            </div>
-          )}
+          <img 
+            src={primaryImage} 
+            alt={product.name} 
+            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+            onError={(e) => {
+              e.currentTarget.src = '/product_images/golden_graze1.png';
+            }}
+          />
           
           {/* Wishlist button */}
-          {onWishlistToggle && (
-            <button
-              onClick={handleWishlistClick}
-              className="absolute top-3 right-3 w-8 h-8 bg-white/90 hover:bg-white rounded-full flex items-center justify-center transition-all duration-300 opacity-0 group-hover:opacity-100 shadow-lg"
-            >
-              <Heart 
-                size={16} 
-                className={`transition-colors ${
-                  isInWishlist ? 'text-red-500 fill-current' : 'text-stone-600'
-                }`} 
-              />
-            </button>
-          )}
+          <button
+            onClick={handleAddToWishlist}
+            disabled={isAddingToWishlist}
+            className="absolute top-3 right-3 w-8 h-8 bg-white/90 hover:bg-white rounded-full flex items-center justify-center transition-all duration-300 opacity-0 group-hover:opacity-100 shadow-lg disabled:opacity-50"
+          >
+            {isAddingToWishlist ? (
+              <Loader2 size={14} className="text-amber-600 animate-spin" />
+            ) : (
+              <Heart size={14} className="text-stone-600 hover:text-red-500 transition-colors" />
+            )}
+          </button>
         </div>
 
         {/* Product Details */}
@@ -87,14 +129,44 @@ export default function ProductCard({
           </div>
 
           {/* Price */}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-4">
             <span className="text-xl font-serif text-stone-900">${price}</span>
-            <div className="text-amber-600 group-hover:text-amber-700 transition-colors">
-              <span className="text-sm font-medium">View Details →</span>
-            </div>
           </div>
         </div>
       </Link>
+
+      {/* Action Buttons - Outside the Link */}
+      <div className="px-6 pb-6 space-y-2">
+        {/* Buy Now Button */}
+        <button
+          onClick={handleBuyNow}
+          className="w-full bg-amber-400 hover:bg-amber-500 text-white py-3 px-4 tracking-widest transition-all duration-300 rounded-lg font-medium flex items-center justify-center space-x-2 transform hover:scale-105 shadow-lg hover:shadow-xl"
+        >
+          <ShoppingBag size={16} />
+          <span>BUY NOW</span>
+        </button>
+
+        {/* Add to Cart Button */}
+        <button
+          onClick={handleAddToCart}
+          disabled={isAddingToCart}
+          className="w-full border-2 border-amber-400 text-amber-700 hover:bg-amber-50 disabled:bg-stone-100 disabled:cursor-not-allowed py-2 px-4 tracking-widest transition-all duration-300 rounded-lg font-medium flex items-center justify-center space-x-2"
+        >
+          {isAddingToCart ? (
+            <>
+              <Loader2 size={14} className="animate-spin" />
+              <span className="text-sm">ADDING...</span>
+            </>
+          ) : (
+            <>
+              <ShoppingBag size={14} />
+              <span className="text-sm">ADD TO CART</span>
+            </>
+          )}
+        </button>
+      </div>
+
+      {/* Auth Modal would go here if needed */}
     </div>
   );
 }

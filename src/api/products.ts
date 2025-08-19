@@ -13,6 +13,21 @@ export type Product = {
   created_at: string;
 };
 
+export type ProductImage = {
+  id: string;
+  product_id: string;
+  storage_path: string | null;
+  public_url: string | null;
+  alt: string | null;
+  sort_order: number;
+  is_primary: boolean;
+  created_at: string;
+};
+
+export type ProductWithImages = Product & {
+  product_images: ProductImage[];
+};
+
 export async function listProducts(params?: {
   page?: number; 
   pageSize?: number;
@@ -25,7 +40,12 @@ export async function listProducts(params?: {
   
   let query = supabase
     .from("products")
-    .select("*", { count: "exact" })
+    .select(`
+      *,
+      product_images!inner(
+        id, storage_path, public_url, alt, sort_order, is_primary
+      )
+    `, { count: "exact" })
     .eq("is_active", true);
 
   // Apply filters
@@ -53,8 +73,24 @@ export async function listProducts(params?: {
   
   if (error) throw error;
   
+  // Transform data to include primary image
+  const products = (data ?? []).map((product: any) => {
+    // Sort images by sort_order and get the first one
+    const sortedImages = (product.product_images || [])
+      .sort((a: ProductImage, b: ProductImage) => a.sort_order - b.sort_order);
+    
+    const primaryImage = sortedImages[0];
+    const imageUrl = primaryImage?.public_url || primaryImage?.storage_path || '/product_images/golden_graze1.png';
+    
+    return {
+      ...product,
+      images: [imageUrl], // For compatibility with existing code
+      product_images: sortedImages
+    };
+  });
+  
   return { 
-    items: (data ?? []) as Product[], 
+    items: products as Product[], 
     total: count ?? 0,
     page,
     pageSize,
@@ -62,16 +98,35 @@ export async function listProducts(params?: {
   };
 }
 
-export async function getProductBySlug(slug: string) {
+export async function getProductBySlug(slug: string): Promise<ProductWithImages> {
   const { data, error } = await supabase
     .from("products")
-    .select("*")
+    .select(`
+      *,
+      product_images(
+        id, storage_path, public_url, alt, sort_order, is_primary, created_at
+      )
+    `)
     .eq("slug", slug)
     .eq("is_active", true)
     .single();
     
   if (error) throw error;
-  return data as Product;
+  
+  // Sort images by sort_order
+  const sortedImages = (data.product_images || [])
+    .sort((a: ProductImage, b: ProductImage) => a.sort_order - b.sort_order);
+  
+  // Create images array for compatibility
+  const imageUrls = sortedImages.map((img: ProductImage) => 
+    img.public_url || img.storage_path || '/product_images/golden_graze1.png'
+  );
+  
+  return {
+    ...data,
+    images: imageUrls.length > 0 ? imageUrls : ['/product_images/golden_graze1.png'],
+    product_images: sortedImages
+  } as ProductWithImages;
 }
 
 export async function getCategories() {
