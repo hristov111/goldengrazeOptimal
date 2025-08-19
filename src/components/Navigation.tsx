@@ -237,6 +237,7 @@ const Navigation: React.FC<NavigationProps> = ({
                             setIsProductsHovered(false);
                           }}
                           className={`w-full text-left px-6 py-4 text-white hover:text-amber-400 hover:bg-amber-400/10 rounded-lg transition-all duration-300 text-sm tracking-wide transform ${
+                            isProductsHovered
                               ? 'translate-x-0 opacity-100' 
                               : 'translate-x-4 opacity-0'
                           }`}
@@ -259,7 +260,6 @@ const Navigation: React.FC<NavigationProps> = ({
                             </div>
                           </div>
                         </button>
-                      </div>
                       ))}
                       
                       {/* View All Products */}
@@ -343,15 +343,11 @@ const Navigation: React.FC<NavigationProps> = ({
                       ...(isAdmin ? [{ name: 'Admin Dashboard', icon: '⚙️', action: () => {
                         console.log('🚀 Admin Dashboard clicked');
                         navigate('/admin');
-                      <div className="text-xs text-amber-300 mb-2">
-                        DEBUG: isAdmin = {isAdmin.toString()}, isCheckingAdmin = {isCheckingAdmin.toString()}
-                      </div>
                       } }] : []),
                       { name: 'My Orders', icon: '📦' },
                       { name: 'Account Settings', icon: '⚙️' },
                       { name: 'Wishlist', icon: '❤️', action: () => navigate('/wishlist') },
                       { name: 'Help & Support', icon: '💬', action: () => navigate('/help') },
-                              console.log('🚀 Mobile Admin Dashboard clicked');
                       { name: 'Support Tickets', icon: '🎫', action: () => navigate('/support-tickets') }
                     ].map((item, index) => (
                       <div key={item.name}>
@@ -384,6 +380,7 @@ const Navigation: React.FC<NavigationProps> = ({
                           <span>{item.name}</span>
                         </div>
                       </button>
+                      </div>
                     ))}
                     
                     {/* Sign Out */}
@@ -558,6 +555,7 @@ const Navigation: React.FC<NavigationProps> = ({
                     {isAdmin && (
                       <button 
                         onClick={() => {
+                          console.log('🚀 Mobile Admin Dashboard clicked');
                           navigate('/admin');
                           setIsMobileMenuOpen(false);
                         }}
