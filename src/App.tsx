@@ -34,7 +34,6 @@ import Customers from './pages/admin/Customers';
 import Analytics from './pages/admin/Analytics';
 import Coupons from './pages/admin/Coupons';
 import ProductDetailPage from './pages/ProductDetailPage';
-import ProductsPage from './pages/ProductsPage';
 
 // Create QueryClient instance
 const queryClient = new QueryClient({
