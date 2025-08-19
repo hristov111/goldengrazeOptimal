@@ -56,7 +56,10 @@ const Navigation: React.FC<NavigationProps> = ({
 
     window.addEventListener('wishlistChanged', handleWishlistChange);
     window.addEventListener('cartChanged', handleCartChange);
-    return () => window.removeEventListener('wishlistChanged', handleWishlistChange);
+    return () => {
+      window.removeEventListener('wishlistChanged', handleWishlistChange);
+      window.removeEventListener('cartChanged', handleCartChange);
+    };
   }, [sessionUser]);
 
   const fetchCounts = async () => {
@@ -300,14 +303,6 @@ const Navigation: React.FC<NavigationProps> = ({
                       <div className="text-amber-200 text-xs">{user.email}</div>
                     </div>
                     
-                    {/* Menu Items */}
-                    {[
-                      { name: 'My Orders', icon: '📦' },
-                      { name: 'Account Settings', icon: '⚙️' },
-                      { name: 'Wishlist', icon: '❤️', action: () => navigate('/wishlist') },
-                      { name: 'Help & Support', icon: '💬', action: () => navigate('/help') },
-                      { name: 'Support Tickets', icon: '🎫', action: () => navigate('/support-tickets') }
-                    ].map((item, index) => (
                     {/* Admin Dashboard - Only for admins */}
                     {isAdmin && (
                       <button
@@ -324,6 +319,7 @@ const Navigation: React.FC<NavigationProps> = ({
                       </button>
                     )}
                     
+                    {/* Menu Items */}
                     {[
                       { name: 'My Orders', icon: '📦' },
                       { name: 'Account Settings', icon: '⚙️' },
@@ -525,18 +521,6 @@ const Navigation: React.FC<NavigationProps> = ({
                 <div className="mt-4 pt-4 border-t border-amber-400/20">
                   <div className="text-amber-400 font-medium mb-2">{user.name}</div>
                   <div className="flex flex-col space-y-2 text-sm">
-                    {/* Mobile Admin Dashboard */}
-                    {isAdmin && (
-                      <button 
-                        onClick={() => {
-                          navigate('/admin');
-                          setIsMobileMenuOpen(false);
-                        }}
-                        className="text-amber-400 hover:text-amber-300 transition-colors text-left font-medium border-b border-amber-400/20 pb-2 mb-2"
-                      >
-                        ⚙️ Admin Dashboard
-                      </button>
-                    )}
                     {isAdmin && (
                       <button 
                         onClick={() => {
