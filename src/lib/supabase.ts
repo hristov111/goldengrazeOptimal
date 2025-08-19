@@ -158,14 +158,17 @@ export const database = {
   // Profile functions (using profiles table, not users)
   getUserProfile: async (userId: string) => {
     try {
+      console.log('🔍 Fetching profile for user ID:', userId);
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .maybeSingle();
       
+      console.log('📊 Profile query result:', { data, error });
       return { data, error };
     } catch (error: any) {
+      console.error('❌ Profile fetch error:', error);
       return { data: null, error: { message: error.message || 'Network error fetching profile' } };
     }
   },
