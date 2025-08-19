@@ -25,7 +25,7 @@ export default function ProductDetailPage() {
   });
 
   const handleAddToCart = async () => {
-    if (product.stock_quantity === 0) return;
+    if (product.stock_quantity === 0 || (product.stock_quantity !== null && quantity > product.stock_quantity)) return;
     
     if (!user) {
       navigate('/signin');
@@ -71,7 +71,7 @@ export default function ProductDetailPage() {
   };
 
   const handleBuyNow = () => {
-    if (product.stock_quantity === 0) return;
+    if (product.stock_quantity === 0 || (product.stock_quantity !== null && quantity > product.stock_quantity)) return;
     
     // Navigate to checkout with this product
     navigate('/checkout', { state: { productId: product?.id, quantity } });
@@ -491,7 +491,11 @@ export default function ProductDetailPage() {
             </div>
 
             {/* Tab Content */}
-            <div className="p-8">
+                  onClick={() => {
+                    const maxQuantity = product.stock_quantity || 1;
+                    setQuantity(Math.min(quantity + 1, maxQuantity));
+                  }}
+                  disabled={product.stock_quantity !== null && quantity >= product.stock_quantity}
               {activeTab === 'description' && (
                 <div className="prose prose-stone max-w-none">
                   {product.description ? (
@@ -622,6 +626,13 @@ export default function ProductDetailPage() {
                     </button>
                   </div>
                 </div>
+              {product.stock_quantity !== null && (
+                <span className="text-stone-600 text-sm">
+                  {product.stock_quantity <= 5 
+                    ? `Only ${product.stock_quantity} available` 
+                    : `${product.stock_quantity} in stock`
+                  }
+                </span>
               )}
             </div>
           </div>
