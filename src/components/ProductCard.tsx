@@ -1,6 +1,8 @@
 import React from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from "react-router-dom";
 import { Star, Heart } from 'lucide-react';
+import { supabase } from '../api/supabaseClient';
 import type { Product } from "../api/products";
 
 interface ProductCardProps {
@@ -14,8 +16,46 @@ export default function ProductCard({
   onWishlistToggle, 
   isInWishlist = false 
 }: ProductCardProps) {
-  const primaryImage = product.images?.[0];
+  const [productImage, setProductImage] = useState<string>('');
+  const [imageLoading, setImageLoading] = useState(true);
   const price = (product.price_cents / 100).toFixed(2);
+
+  useEffect(() => {
+    fetchProductImage();
+  }, [product.id]);
+
+  const fetchProductImage = async () => {
+    try {
+      setImageLoading(true);
+      
+      const { data, error } = await supabase
+        .from('product_images')
+        .select('public_url, storage_path')
+        .eq('product_id', product.id)
+        .order('sort_order', { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      
+      if (error) {
+        console.error('Error fetching product image:', error);
+        setProductImage('/product_images/golden_graze1.png');
+        return;
+      }
+      
+      if (data) {
+        const imageUrl = data.public_url || data.storage_path;
+        setProductImage(imageUrl || '/product_images/golden_graze1.png');
+      } else {
+        // Fallback to product.images array or default
+        setProductImage(product.images?.[0] || '/product_images/golden_graze1.png');
+      }
+    } catch (err) {
+      console.error('Failed to fetch product image:', err);
+      setProductImage('/product_images/golden_graze1.png');
+    } finally {
+      setImageLoading(false);
+    }
+  };
 
   const handleWishlistClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -28,13 +68,21 @@ export default function ProductCard({
       <Link to={`/products/${product.slug}`} className="block">
         {/* Product Image */}
         <div className="aspect-square bg-gradient-to-br from-amber-100 to-amber-200 overflow-hidden relative">
-          {primaryImage ? (
+          {imageLoading ? (
+            <div className="w-full h-full flex items-center justify-center">
+              <div className="w-8 h-8 border-2 border-amber-400 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          ) : productImage ? (
             <img 
-              src={primaryImage} 
+              src={productImage} 
               alt={product.name} 
               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
               onError={(e) => {
-                e.currentTarget.src = '/product_images/golden_graze1.png';
+                if (e.currentTarget.src.includes('golden_graze1.png')) {
+                  e.currentTarget.src = '/balm_images/firstPic.png';
+                } else if (e.currentTarget.src.includes('firstPic.png')) {
+                  e.currentTarget.src = '/balm_images/Golder Graze.png';
+                }
               }}
             />
           ) : (
