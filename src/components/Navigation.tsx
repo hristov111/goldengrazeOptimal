@@ -302,7 +302,29 @@ const Navigation: React.FC<NavigationProps> = ({
                     
                     {/* Menu Items */}
                     {[
-                      ...(isAdmin ? [{ name: 'Admin Dashboard', icon: '⚙️', action: () => navigate('/admin') }] : []),
+                      { name: 'My Orders', icon: '📦' },
+                      { name: 'Account Settings', icon: '⚙️' },
+                      { name: 'Wishlist', icon: '❤️', action: () => navigate('/wishlist') },
+                      { name: 'Help & Support', icon: '💬', action: () => navigate('/help') },
+                      { name: 'Support Tickets', icon: '🎫', action: () => navigate('/support-tickets') }
+                    ].map((item, index) => (
+                    {/* Admin Dashboard - Only for admins */}
+                    {isAdmin && (
+                      <button
+                        onClick={() => {
+                          navigate('/admin');
+                          setIsUserDropdownOpen(false);
+                        }}
+                        className="w-full text-left px-4 py-3 text-amber-400 hover:text-amber-300 hover:bg-amber-400/10 rounded-lg transition-all duration-300 text-sm tracking-wide border-b border-amber-400/20 mb-2"
+                      >
+                        <div className="flex items-center space-x-3">
+                          <span className="text-base">⚙️</span>
+                          <span>Admin Dashboard</span>
+                        </div>
+                      </button>
+                    )}
+                    
+                    {[
                       { name: 'My Orders', icon: '📦' },
                       { name: 'Account Settings', icon: '⚙️' },
                       { name: 'Wishlist', icon: '❤️', action: () => navigate('/wishlist') },
@@ -503,6 +525,18 @@ const Navigation: React.FC<NavigationProps> = ({
                 <div className="mt-4 pt-4 border-t border-amber-400/20">
                   <div className="text-amber-400 font-medium mb-2">{user.name}</div>
                   <div className="flex flex-col space-y-2 text-sm">
+                    {/* Mobile Admin Dashboard */}
+                    {isAdmin && (
+                      <button 
+                        onClick={() => {
+                          navigate('/admin');
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className="text-amber-400 hover:text-amber-300 transition-colors text-left font-medium border-b border-amber-400/20 pb-2 mb-2"
+                      >
+                        ⚙️ Admin Dashboard
+                      </button>
+                    )}
                     {isAdmin && (
                       <button 
                         onClick={() => {
