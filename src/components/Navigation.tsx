@@ -224,6 +224,16 @@ const Navigation: React.FC<NavigationProps> = ({ isLoggedIn, user, onSignOut }) 
                 onClick={() => navigate('/products')}
                 className="flex items-center space-x-1 text-white hover:text-amber-400 transition-all duration-300 text-sm tracking-wider group-hover:scale-105"
               >
+                <div className="w-4 h-4 bg-gradient-to-br from-amber-100 to-amber-200 rounded-sm flex items-center justify-center mr-1">
+                  <img 
+                    src="/product_images/golden_graze1.png" 
+                    alt="" 
+                    className="w-3 h-3 object-cover rounded-sm"
+                    onError={(e) => {
+                      e.currentTarget.src = "/balm_images/firstPic.png";
+                    }}
+                  />
+                </div>
                 <span>Products</span>
                 <ChevronDown 
                   size={14} 
@@ -427,7 +437,7 @@ const Navigation: React.FC<NavigationProps> = ({ isLoggedIn, user, onSignOut }) 
               <div className="flex items-center space-x-4">
                 <button 
                   onClick={() => navigate('/signin')}
-                  className="text-white hover:text-amber-400 transition-all duration-300 text-sm tracking-wider hover:scale-105"
+                  className="text-amber-400 hover:text-amber-300 transition-all duration-300 text-sm tracking-wider hover:scale-105"
                 >
                   Sign In
                 </button>
@@ -462,8 +472,85 @@ const Navigation: React.FC<NavigationProps> = ({ isLoggedIn, user, onSignOut }) 
                   navigate('/products');
                   setIsMobileMenuOpen(false);
                 }}
-                className="text-amber-400 hover:text-amber-300 transition-colors text-left tracking-wider font-medium"
+                className="flex items-center space-x-2 text-amber-400 hover:text-amber-300 transition-colors text-left tracking-wider font-medium"
               >
+                <div className="w-4 h-4 bg-gradient-to-br from-amber-100 to-amber-200 rounded-sm flex items-center justify-center">
+                  <img 
+                    src="/product_images/golden_graze1.png" 
+                    alt="" 
+                    className="w-3 h-3 object-cover rounded-sm"
+                    onError={(e) => {
+                      e.currentTarget.src = "/balm_images/firstPic.png";
+                    }}
+                  />
+                </div>
+                <span>Products</span>
+              </button>
+              
+              {renderCartButton(true)}
+              {renderWishlistButton(true)}
+              
+              {/* Mobile Auth/User Menu */}
+              {!isLoggedIn ? (
+                <div className="flex flex-col space-y-2 mt-4 pt-4 border-t border-amber-400/20">
+                  <button
+                    onClick={() => {
+                      navigate('/signin');
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="text-amber-400 hover:text-amber-300 transition-colors text-left"
+                  >
+                    Sign In
+                  </button>
+                  <button
+                    onClick={() => {
+                      navigate('/signup');
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="text-amber-400 hover:text-amber-300 transition-colors text-left"
+                  >
+                    Sign Up
+                  </button>
+                </div>
+              ) : (
+                <div className="mt-4 pt-4 border-t border-amber-400/20">
+                  <div className="text-amber-400 font-medium mb-2">{user?.name || 'User'}</div>
+                  <div className="flex flex-col space-y-2 text-sm">
+                    {menuItems.map((item) => (
+                      <button 
+                        key={item.name}
+                        onClick={() => {
+                          item.action();
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className={`text-amber-200 hover:text-amber-400 transition-colors text-left ${
+                          item.className || ''
+                        }`}
+                      >
+                        {item.name}
+                      </button>
+                    ))}
+                    <button 
+                      onClick={() => {
+                        onSignOut();
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="text-red-400 hover:text-red-300 transition-colors text-left"
+                    >
+                      Sign Out
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </nav>
+  );
+};
+
+export default Navigation;
                 Products
               </button>
               
