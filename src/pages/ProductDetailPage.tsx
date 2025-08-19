@@ -25,7 +25,7 @@ export default function ProductDetailPage() {
   });
 
   const handleAddToCart = async () => {
-    if (product.stock_quantity === 0) return;
+    if (product.stock_quantity === 0 || (product.stock_quantity !== null && quantity > product.stock_quantity)) return;
     
     if (!user) {
       navigate('/signin');
@@ -71,7 +71,7 @@ export default function ProductDetailPage() {
   };
 
   const handleBuyNow = () => {
-    if (product.stock_quantity === 0) return;
+    if (product.stock_quantity === 0 || (product.stock_quantity !== null && quantity > product.stock_quantity)) return;
     
     // Navigate to checkout with this product
     navigate('/checkout', { state: { productId: product?.id, quantity } });
