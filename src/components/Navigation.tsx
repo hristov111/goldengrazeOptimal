@@ -74,21 +74,25 @@ const Navigation: React.FC<NavigationProps> = ({
   const checkAdminStatus = async () => {
     if (!sessionUser) return;
     
+    console.log('🔍 Checking admin status for user:', sessionUser.id);
     setIsCheckingAdmin(true);
     try {
       const { data, error } = await database.getUserProfile(sessionUser.id);
       
       if (error) {
-        console.error('Failed to check admin status:', error);
+        console.error('❌ Failed to check admin status:', error);
         setIsAdmin(false);
         return;
       }
       
+      console.log('📊 Profile data:', data);
+      console.log('🔐 Is admin:', data?.is_admin);
       setIsAdmin(data?.is_admin || false);
     } catch (error) {
       console.error('Error checking admin status:', error);
       setIsAdmin(false);
     } finally {
+      console.log('✅ Admin check complete. isAdmin:', isAdmin);
       setIsCheckingAdmin(false);
     }
   };
@@ -233,7 +237,6 @@ const Navigation: React.FC<NavigationProps> = ({
                             setIsProductsHovered(false);
                           }}
                           className={`w-full text-left px-6 py-4 text-white hover:text-amber-400 hover:bg-amber-400/10 rounded-lg transition-all duration-300 text-sm tracking-wide transform ${
-                            isProductsHovered 
                               ? 'translate-x-0 opacity-100' 
                               : 'translate-x-4 opacity-0'
                           }`}
@@ -256,6 +259,7 @@ const Navigation: React.FC<NavigationProps> = ({
                             </div>
                           </div>
                         </button>
+                      </div>
                       ))}
                       
                       {/* View All Products */}
@@ -336,13 +340,26 @@ const Navigation: React.FC<NavigationProps> = ({
                     
                     {/* Menu Items */}
                     {[
-                      ...(isAdmin ? [{ name: 'Admin Dashboard', icon: '⚙️', action: () => navigate('/admin') }] : []),
+                      ...(isAdmin ? [{ name: 'Admin Dashboard', icon: '⚙️', action: () => {
+                        console.log('🚀 Admin Dashboard clicked');
+                        navigate('/admin');
+                      <div className="text-xs text-amber-300 mb-2">
+                        DEBUG: isAdmin = {isAdmin.toString()}, isCheckingAdmin = {isCheckingAdmin.toString()}
+                      </div>
+                      } }] : []),
                       { name: 'My Orders', icon: '📦' },
                       { name: 'Account Settings', icon: '⚙️' },
                       { name: 'Wishlist', icon: '❤️', action: () => navigate('/wishlist') },
                       { name: 'Help & Support', icon: '💬', action: () => navigate('/help') },
+                              console.log('🚀 Mobile Admin Dashboard clicked');
                       { name: 'Support Tickets', icon: '🎫', action: () => navigate('/support-tickets') }
                     ].map((item, index) => (
+                      <div key={item.name}>
+                        {item.name === 'Admin Dashboard' && (
+                          <div className="text-xs text-amber-300 px-4 py-1">
+                            DEBUG: Admin button should appear here (isAdmin: {isAdmin.toString()})
+                          </div>
+                        )}
                       <button
                         key={item.name}
                         onClick={() => {
