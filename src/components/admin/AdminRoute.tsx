@@ -8,7 +8,8 @@ interface AdminRouteProps {
 
 const ADMIN_EMAILS = [
   'admin@mygoldengraze.com',
-  'goldengraze1@outlook.com'
+  'goldengraze1@outlook.com',
+  'your-admin-email@example.com'  // Add your admin email here
 ];
 
 const AdminRoute: React.FC<AdminRouteProps> = ({ children }) => {
