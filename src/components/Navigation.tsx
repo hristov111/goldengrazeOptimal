@@ -521,15 +521,16 @@ const Navigation: React.FC<NavigationProps> = ({
                 <div className="mt-4 pt-4 border-t border-amber-400/20">
                   <div className="text-amber-400 font-medium mb-2">{user.name}</div>
                   <div className="flex flex-col space-y-2 text-sm">
+                    {/* Mobile Admin Dashboard */}
                     {isAdmin && (
                       <button 
                         onClick={() => {
                           navigate('/admin');
                           setIsMobileMenuOpen(false);
                         }}
-                        className="text-amber-200 hover:text-amber-400 transition-colors text-left"
+                        className="text-amber-400 hover:text-amber-300 transition-colors text-left font-medium border-b border-amber-400/20 pb-2 mb-2"
                       >
-                        Admin Dashboard
+                        ⚙️ Admin Dashboard
                       </button>
                     )}
                     <button 
