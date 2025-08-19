@@ -555,7 +555,6 @@ const Navigation: React.FC<NavigationProps> = ({
                     {isAdmin && (
                       <button 
                         onClick={() => {
-                          console.log('🚀 Mobile Admin Dashboard clicked');
                           navigate('/admin');
                           setIsMobileMenuOpen(false);
                         }}
