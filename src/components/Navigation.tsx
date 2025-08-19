@@ -2,21 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ShoppingBag, Menu, X, ChevronDown, Heart } from 'lucide-react';
 import { useSessionUser } from '../lib/hooks/useSessionUser';
-import { database } from '../lib/supabase';
+import { database, supabase } from '../lib/supabase';
 
 interface NavigationProps {
   isLoggedIn: boolean;
-  user: {name: string; email: string; id: string} | null;
+  user: { name: string; email: string; id: string } | null;
   onSignOut: () => void;
 }
 
-const Navigation: React.FC<NavigationProps> = ({ 
-  isLoggedIn, 
-  user, 
-  onSignOut 
-}) => {
+const Navigation: React.FC<NavigationProps> = ({ isLoggedIn, user, onSignOut }) => {
   const navigate = useNavigate();
-  const location = useLocation();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProductsHovered, setIsProductsHovered] = useState(false);
@@ -26,11 +21,10 @@ const Navigation: React.FC<NavigationProps> = ({
   const [productsError, setProductsError] = useState<string | null>(null);
   const [cartCount, setCartCount] = useState(0);
   const [wishlistCount, setWishlistCount] = useState(0);
-  const { user: sessionUser } = useSessionUser();
   const [isAdmin, setIsAdmin] = useState(false);
-  const [isCheckingAdmin, setIsCheckingAdmin] = useState(false);
+  const { user: sessionUser } = useSessionUser();
 
-  // Fetch cart and wishlist counts
+  // Fetch cart and wishlist counts when user changes
   useEffect(() => {
     if (sessionUser) {
       fetchCounts();
@@ -40,29 +34,22 @@ const Navigation: React.FC<NavigationProps> = ({
     }
   }, [sessionUser]);
 
-  // Listen for wishlist changes
+  // Listen for cart/wishlist changes
   useEffect(() => {
-    const handleWishlistChange = () => {
-      if (sessionUser) {
-        fetchCounts();
-      }
+    const handleCountChange = () => {
+      if (sessionUser) fetchCounts();
     };
 
-    const handleCartChange = () => {
-      if (sessionUser) {
-        fetchCounts();
-      }
-    };
-
-    window.addEventListener('wishlistChanged', handleWishlistChange);
-    window.addEventListener('cartChanged', handleCartChange);
+    window.addEventListener('wishlistChanged', handleCountChange);
+    window.addEventListener('cartChanged', handleCountChange);
+    
     return () => {
-      window.removeEventListener('wishlistChanged', handleWishlistChange);
-      window.removeEventListener('cartChanged', handleCartChange);
+      window.removeEventListener('wishlistChanged', handleCountChange);
+      window.removeEventListener('cartChanged', handleCountChange);
     };
   }, [sessionUser]);
 
-  // Check admin status from database
+  // Check admin status when user changes
   useEffect(() => {
     if (sessionUser) {
       checkAdminStatus();
@@ -71,33 +58,29 @@ const Navigation: React.FC<NavigationProps> = ({
     }
   }, [sessionUser]);
 
+  // Handle scroll effect
+  useEffect(() => {
+    const handleScroll = () => setIsScrolled(window.scrollY > 50);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   const checkAdminStatus = async () => {
     if (!sessionUser) return;
     
-    console.log('🔍 Checking admin status for user:', sessionUser.id);
-    setIsCheckingAdmin(true);
-    let profileData = null;
-    
     try {
-      const { data, error } = await database.getUserProfile(sessionUser.id);
+      const { data: profile, error } = await database.getUserProfile(sessionUser.id);
       
       if (error) {
-        console.error('❌ Failed to check admin status:', error);
+        console.error('Failed to check admin status:', error);
         setIsAdmin(false);
         return;
       }
       
-      profileData = data;
-      
-      console.log('📊 Profile data:', profileData);
-      console.log('🔐 Is admin:', profileData?.is_admin);
-      setIsAdmin(profileData?.is_admin || false);
+      setIsAdmin(profile?.is_admin || false);
     } catch (error) {
       console.error('Error checking admin status:', error);
       setIsAdmin(false);
-    } finally {
-      setIsCheckingAdmin(false);
-      console.log('✅ Admin check complete. Final isAdmin state will be:', profileData?.is_admin || false);
     }
   };
 
@@ -123,15 +106,6 @@ const Navigation: React.FC<NavigationProps> = ({
     }
   };
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
   const fetchProducts = async () => {
     if (products.length > 0) return; // Don't fetch if already loaded
     
@@ -148,7 +122,7 @@ const Navigation: React.FC<NavigationProps> = ({
       
       setProducts(data || []);
     } catch (err: any) {
-      setProductsError('Network error loading products. Please check your connection.');
+      setProductsError('Network error loading products');
     } finally {
       setIsLoadingProducts(false);
     }
@@ -156,10 +130,69 @@ const Navigation: React.FC<NavigationProps> = ({
 
   const handleProductsHover = (isHovering: boolean) => {
     setIsProductsHovered(isHovering);
-    if (isHovering) {
-      fetchProducts();
-    }
+    if (isHovering) fetchProducts();
   };
+
+  const menuItems = [
+    ...(isAdmin ? [{ 
+      name: 'Admin Dashboard', 
+      icon: '⚙️', 
+      action: () => navigate('/admin'),
+      className: 'text-amber-300 font-medium border-b border-amber-400/20 pb-2 mb-2'
+    }] : []),
+    { name: 'My Orders', icon: '📦', action: () => navigate('/orders') },
+    { name: 'Account Settings', icon: '⚙️', action: () => navigate('/account-settings') },
+    { name: 'Wishlist', icon: '❤️', action: () => navigate('/wishlist') },
+    { name: 'Help & Support', icon: '💬', action: () => navigate('/help') },
+    { name: 'Support Tickets', icon: '🎫', action: () => navigate('/support-tickets') }
+  ];
+
+  const renderCountBadge = (count: number) => {
+    if (count === 0) return null;
+    return (
+      <div className="absolute -top-2 -left-2 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center animate-pulse">
+        {count > 99 ? '99+' : count}
+      </div>
+    );
+  };
+
+  const renderCartButton = (isMobile = false) => (
+    <button 
+      onClick={() => navigate('/cart')}
+      className={`relative group text-amber-400 hover:text-amber-300 transition-all duration-300 hover:scale-110 ${
+        isMobile ? 'flex items-center space-x-2' : ''
+      }`}
+      aria-label="View Cart"
+    >
+      <div className="flex items-center space-x-2 relative">
+        <ShoppingBag size={20} />
+        {renderCountBadge(cartCount)}
+        {isMobile && <span>Cart</span>}
+      </div>
+      {!isMobile && (
+        <div className="absolute -top-1 -right-1 w-3 h-3 bg-amber-400 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-pulse"></div>
+      )}
+    </button>
+  );
+
+  const renderWishlistButton = (isMobile = false) => (
+    <button 
+      onClick={() => navigate('/wishlist')}
+      className={`relative group text-amber-400 hover:text-amber-300 transition-all duration-300 hover:scale-110 ${
+        isMobile ? 'flex items-center space-x-2' : ''
+      }`}
+      aria-label="View Wishlist"
+    >
+      <div className="flex items-center space-x-2 relative">
+        <Heart size={20} />
+        {renderCountBadge(wishlistCount)}
+        {isMobile && <span>Wishlist</span>}
+      </div>
+      {!isMobile && (
+        <div className="absolute -top-1 -right-1 w-3 h-3 bg-amber-400 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-pulse"></div>
+      )}
+    </button>
+  );
 
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
@@ -181,6 +214,7 @@ const Navigation: React.FC<NavigationProps> = ({
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
+            {/* Products Dropdown */}
             <div 
               className="relative group"
               onMouseEnter={() => handleProductsHover(true)}
@@ -199,14 +233,13 @@ const Navigation: React.FC<NavigationProps> = ({
                 />
               </button>
               
-              {/* Dropdown Menu */}
+              {/* Products Dropdown Menu */}
               <div className={`absolute top-full left-0 mt-1 w-72 bg-black/95 backdrop-blur-sm border border-amber-400/20 rounded-lg shadow-2xl transition-all duration-500 origin-top ${
                 isProductsHovered 
                   ? 'opacity-100 scale-100 translate-y-0' 
                   : 'opacity-0 scale-95 -translate-y-2 pointer-events-none'
               }`}>
                 <div className="p-4">
-                  {/* Loading State */}
                   {isLoadingProducts && (
                     <div className="flex items-center justify-center py-6">
                       <div className="w-5 h-5 border-2 border-amber-400 border-t-transparent rounded-full animate-spin mr-3"></div>
@@ -214,7 +247,6 @@ const Navigation: React.FC<NavigationProps> = ({
                     </div>
                   )}
                   
-                  {/* Error State */}
                   {productsError && !isLoadingProducts && (
                     <div className="text-center py-6">
                       <div className="text-red-400 text-sm mb-2">Failed to load products</div>
@@ -230,7 +262,6 @@ const Navigation: React.FC<NavigationProps> = ({
                     </div>
                   )}
                   
-                  {/* Products List */}
                   {!isLoadingProducts && !productsError && products.length > 0 && (
                     <>
                       {products.map((product, index) => (
@@ -266,7 +297,6 @@ const Navigation: React.FC<NavigationProps> = ({
                         </button>
                       ))}
                       
-                      {/* View All Products */}
                       <div className="border-t border-amber-400/20 mt-3 pt-3">
                         <button
                           onClick={() => {
@@ -281,7 +311,6 @@ const Navigation: React.FC<NavigationProps> = ({
                     </>
                   )}
                   
-                  {/* No Products State */}
                   {!isLoadingProducts && !productsError && products.length === 0 && (
                     <div className="text-center py-6">
                       <div className="text-amber-200 text-sm mb-2">No products available</div>
@@ -298,10 +327,7 @@ const Navigation: React.FC<NavigationProps> = ({
                   )}
                 </div>
                 
-                {/* Decorative border */}
                 <div className="absolute -top-1 left-6 w-8 h-1 bg-gradient-to-r from-amber-400 to-amber-600 rounded-full"></div>
-                
-                {/* Invisible hover bridge to prevent dropdown from closing */}
                 <div className="absolute -top-2 left-0 right-0 h-4 bg-transparent"></div>
               </div>
             </div>
@@ -317,10 +343,12 @@ const Navigation: React.FC<NavigationProps> = ({
                 <button className="flex items-center space-x-2 text-white hover:text-amber-400 transition-all duration-300 text-sm tracking-wider group">
                   <div className="w-8 h-8 bg-gradient-to-br from-amber-400 to-amber-500 rounded-full flex items-center justify-center">
                     <span className="text-white font-medium text-xs">
-                      {user.name.split(' ').map(n => n[0]).join('')}
+                      {user?.name.split(' ').map(n => n[0]).join('') || 'U'}
                     </span>
                   </div>
-                  <span className="group-hover:scale-105 transition-transform duration-300">{user.name.split(' ')[0]}</span>
+                  <span className="group-hover:scale-105 transition-transform duration-300">
+                    {user?.name.split(' ')[0] || 'User'}
+                  </span>
                   <ChevronDown 
                     size={14} 
                     className={`transition-transform duration-300 ${
@@ -338,43 +366,23 @@ const Navigation: React.FC<NavigationProps> = ({
                   <div className="p-4">
                     {/* User Info */}
                     <div className="px-4 py-3 border-b border-amber-400/20 mb-2">
-                      <div className="text-white font-medium">{user.name}</div>
-                      <div className="text-amber-200 text-xs">{user.email}</div>
+                      <div className="text-white font-medium">{user?.name || 'User'}</div>
+                      <div className="text-amber-200 text-xs">{user?.email}</div>
                     </div>
                     
                     {/* Menu Items */}
-                    {[
-                      ...(isAdmin ? [{ name: 'Admin Dashboard', icon: '⚙️', action: () => {
-                        console.log('🚀 Admin Dashboard clicked');
-                        navigate('/admin');
-                      } }] : []),
-                      { name: 'My Orders', icon: '📦' },
-                      { name: 'Account Settings', icon: '⚙️' },
-                      { name: 'Wishlist', icon: '❤️', action: () => navigate('/wishlist') },
-                      { name: 'Help & Support', icon: '💬', action: () => navigate('/help') },
-                      { name: 'Support Tickets', icon: '🎫', action: () => navigate('/support-tickets') }
-                    ].map((item, index) => (
-                      <div key={item.name}>
-                        {item.name === 'Admin Dashboard' && (
-                          <div className="text-xs text-amber-300 px-4 py-1">
-                            DEBUG: Admin button should appear here (isAdmin: {isAdmin.toString()})
-                          </div>
-                        )}
+                    {menuItems.map((item, index) => (
                       <button
                         key={item.name}
                         onClick={() => {
-                          if (item.action) item.action();
-                          else if (item.name === 'My Orders') navigate('/orders');
-                          else if (item.name === 'Account Settings') navigate('/account-settings');
-                          else if (item.name === 'Help & Support') navigate('/help');
-                          else if (item.name === 'Support Tickets') navigate('/support-tickets');
+                          item.action();
                           setIsUserDropdownOpen(false);
                         }}
                         className={`w-full text-left px-4 py-3 text-white hover:text-amber-400 hover:bg-amber-400/10 rounded-lg transition-all duration-300 text-sm tracking-wide transform ${
                           isUserDropdownOpen 
                             ? 'translate-x-0 opacity-100' 
                             : 'translate-x-4 opacity-0'
-                        }`}
+                        } ${item.className || ''}`}
                         style={{ 
                           transitionDelay: isUserDropdownOpen ? `${index * 50}ms` : '0ms' 
                         }}
@@ -384,7 +392,6 @@ const Navigation: React.FC<NavigationProps> = ({
                           <span>{item.name}</span>
                         </div>
                       </button>
-                      </div>
                     ))}
                     
                     {/* Sign Out */}
@@ -400,7 +407,7 @@ const Navigation: React.FC<NavigationProps> = ({
                             : 'translate-x-4 opacity-0'
                         }`}
                         style={{ 
-                          transitionDelay: isUserDropdownOpen ? `${(isAdmin ? 6 : 5) * 50}ms` : '0ms' 
+                          transitionDelay: isUserDropdownOpen ? `${menuItems.length * 50}ms` : '0ms' 
                         }}
                       >
                         <div className="flex items-center space-x-3">
@@ -411,10 +418,7 @@ const Navigation: React.FC<NavigationProps> = ({
                     </div>
                   </div>
                   
-                  {/* Decorative border */}
                   <div className="absolute -top-1 right-6 w-8 h-1 bg-gradient-to-r from-amber-400 to-amber-600 rounded-full"></div>
-                  
-                  {/* Invisible hover bridge */}
                   <div className="absolute -top-4 left-0 right-0 h-4 bg-transparent"></div>
                 </div>
               </div>
@@ -436,35 +440,8 @@ const Navigation: React.FC<NavigationProps> = ({
               </div>
             )}
             
-            {/* Wishlist Button */}
-            <button 
-              onClick={() => navigate('/wishlist')}
-              className="relative group text-amber-400 hover:text-amber-300 transition-all duration-300 hover:scale-110"
-              aria-label="View Wishlist"
-            >
-              <Heart size={20} />
-              {wishlistCount > 0 && (
-                <div className="absolute -top-2 -left-2 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center animate-pulse">
-                  {wishlistCount > 99 ? '99+' : wishlistCount}
-                </div>
-              )}
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-amber-400 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-pulse"></div>
-            </button>
-            
-            {/* Cart Button with Animation */}
-            <button 
-              onClick={() => navigate('/cart')}
-              className="relative group text-amber-400 hover:text-amber-300 transition-all duration-300 hover:scale-110"
-              aria-label="View Cart"
-            >
-              <ShoppingBag size={20} />
-              {cartCount > 0 && (
-                <div className="absolute -top-2 -left-2 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center animate-pulse">
-                  {cartCount > 99 ? '99+' : cartCount}
-                </div>
-              )}
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-amber-400 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-pulse"></div>
-            </button>
+            {renderWishlistButton()}
+            {renderCartButton()}
           </div>
 
           {/* Mobile Menu Button */}
@@ -490,44 +467,11 @@ const Navigation: React.FC<NavigationProps> = ({
                 Products
               </button>
               
-              <button className="text-amber-400 hover:text-amber-300 transition-colors flex items-center space-x-2 mt-4">
-                <button
-                  onClick={() => navigate('/cart')}
-                  className="flex items-center space-x-2 relative"
-                  aria-label="View Cart"
-                >
-                  <ShoppingBag size={20} />
-                  {cartCount > 0 && (
-                    <div className="absolute -top-2 -left-2 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
-                      {cartCount > 99 ? '99+' : cartCount}
-                    </div>
-                  )}
-                  <span>Cart</span>
-                </button>
-              </button>
+              {renderCartButton(true)}
+              {renderWishlistButton(true)}
               
-              {/* Mobile Wishlist Button */}
-              <button 
-                onClick={() => {
-                  navigate('/wishlist');
-                  setIsMobileMenuOpen(false);
-                }}
-                className="text-amber-400 hover:text-amber-300 transition-colors flex items-center space-x-2 mt-2"
-                aria-label="View Wishlist"
-              >
-                <div className="flex items-center space-x-2 relative">
-                  <Heart size={20} />
-                  {wishlistCount > 0 && (
-                    <div className="absolute -top-2 -left-2 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
-                      {wishlistCount > 99 ? '99+' : wishlistCount}
-                    </div>
-                  )}
-                  <span>Wishlist</span>
-                </div>
-              </button>
-              
-              {/* Mobile Auth Buttons */}
-              {!isLoggedIn && (
+              {/* Mobile Auth/User Menu */}
+              {!isLoggedIn ? (
                 <div className="flex flex-col space-y-2 mt-4 pt-4 border-t border-amber-400/20">
                   <button
                     onClick={() => {
@@ -548,61 +492,24 @@ const Navigation: React.FC<NavigationProps> = ({
                     Sign Up
                   </button>
                 </div>
-              )}
-              
-              {/* Mobile User Menu */}
-              {isLoggedIn && user && (
+              ) : (
                 <div className="mt-4 pt-4 border-t border-amber-400/20">
-                  <div className="text-amber-400 font-medium mb-2">{user.name}</div>
+                  <div className="text-amber-400 font-medium mb-2">{user?.name || 'User'}</div>
                   <div className="flex flex-col space-y-2 text-sm">
-                    {/* Mobile Admin Dashboard */}
-                    {isAdmin && (
+                    {menuItems.map((item) => (
                       <button 
+                        key={item.name}
                         onClick={() => {
-                          navigate('/admin');
+                          item.action();
                           setIsMobileMenuOpen(false);
                         }}
-                        className="text-amber-200 hover:text-amber-400 transition-colors text-left"
+                        className={`text-amber-200 hover:text-amber-400 transition-colors text-left ${
+                          item.className || ''
+                        }`}
                       >
-                        Admin Dashboard
+                        {item.name}
                       </button>
-                    )}
-                    <button 
-                      onClick={() => {
-                        navigate('/orders');
-                        setIsMobileMenuOpen(false);
-                      }}
-                      className="text-amber-200 hover:text-amber-400 transition-colors text-left"
-                    >
-                      My Orders
-                    </button>
-                    <button 
-                      onClick={() => {
-                        navigate('/account-settings');
-                        setIsMobileMenuOpen(false);
-                      }}
-                      className="text-amber-200 hover:text-amber-400 transition-colors text-left"
-                    >
-                      Account Settings
-                    </button>
-                    <button 
-                      onClick={() => {
-                        navigate('/wishlist');
-                        setIsMobileMenuOpen(false);
-                      }}
-                      className="text-amber-200 hover:text-amber-400 transition-colors text-left"
-                    >
-                      Wishlist
-                    </button>
-                    <button 
-                      onClick={() => {
-                        navigate('/help');
-                        setIsMobileMenuOpen(false);
-                      }}
-                      className="text-amber-200 hover:text-amber-400 transition-colors text-left"
-                    >
-                      Help & Support
-                    </button>
+                    ))}
                     <button 
                       onClick={() => {
                         onSignOut();
