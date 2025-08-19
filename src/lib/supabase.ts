@@ -185,6 +185,36 @@ export const database = {
     }
   },
 
+  // Admin functions
+  setUserAdminStatus: async (userId: string, isAdmin: boolean) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .update({ is_admin: isAdmin })
+        .eq('id', userId)
+        .select()
+        .single();
+      
+      return { data, error };
+    } catch (error: any) {
+      return { data: null, error: { message: error.message || 'Network error updating admin status' } };
+    }
+  },
+
+  getAdminUsers: async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, full_name, created_at')
+        .eq('is_admin', true)
+        .order('created_at', { ascending: false });
+      
+      return { data, error };
+    } catch (error: any) {
+      return { data: [], error: { message: error.message || 'Network error fetching admin users' } };
+    }
+  },
+
   // Product functions
   getProducts: async () => {
     try {

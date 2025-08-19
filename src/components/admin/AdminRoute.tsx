@@ -1,21 +1,18 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
+import { useIsAdmin } from '../../lib/hooks/useIsAdmin';
 import { useAuth } from '../../contexts/AuthContext';
 
 interface AdminRouteProps {
   children: React.ReactNode;
 }
 
-const ADMIN_EMAILS = [
-  'admin@mygoldengraze.com',
-  'goldengraze1@outlook.com',
-  'your-admin-email@example.com'  // Add your admin email here
-];
-
 const AdminRoute: React.FC<AdminRouteProps> = ({ children }) => {
-  const { isLoggedIn, user, isLoading } = useAuth();
+  const { isLoggedIn, isLoading: authLoading } = useAuth();
+  const { isAdmin, isLoading: adminLoading } = useIsAdmin();
 
-  if (isLoading) {
+  // Show loading state while checking authentication and admin status
+  if (authLoading || adminLoading) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="text-center">
@@ -26,12 +23,12 @@ const AdminRoute: React.FC<AdminRouteProps> = ({ children }) => {
     );
   }
 
-  if (!isLoggedIn || !user) {
+  // Redirect to sign in if not logged in
+  if (!isLoggedIn) {
     return <Navigate to="/signin" replace />;
   }
 
-  const isAdmin = ADMIN_EMAILS.includes(user.email.toLowerCase());
-  
+  // Redirect to home if not admin
   if (!isAdmin) {
     return <Navigate to="/" replace />;
   }
