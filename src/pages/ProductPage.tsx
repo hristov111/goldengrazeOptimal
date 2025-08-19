@@ -24,7 +24,7 @@ interface Product {
 }
 
 const ProductPage: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id } = useParams<{ id?: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { addToCart } = useCart();
@@ -36,20 +36,29 @@ const ProductPage: React.FC = () => {
   const [quantity, setQuantity] = useState(1);
 
   useEffect(() => {
-    if (id) {
-      fetchProduct(id);
-    }
+    // If ID is provided, fetch that specific product
+    // Otherwise, fetch the first available product
+    fetchProduct(id);
   }, [id]);
 
-  const fetchProduct = async (productId: string) => {
+  const fetchProduct = async (productId?: string) => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      
+      let query = supabase
         .from('products')
         .select('*')
-        .eq('id', productId)
-        .eq('is_active', true)
-        .single();
+        .eq('is_active', true);
+      
+      if (productId) {
+        // Fetch specific product by ID
+        query = query.eq('id', productId);
+      } else {
+        // Fetch first available product
+        query = query.limit(1);
+      }
+      
+      const { data, error } = await query.single();
 
       if (error) throw error;
       setProduct(data);
