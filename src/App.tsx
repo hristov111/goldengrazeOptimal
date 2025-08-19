@@ -29,7 +29,7 @@ import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import TermsOfServicePage from './pages/TermsOfServicePage';
 import Dashboard from './pages/admin/Dashboard';
 import Orders from './pages/admin/Orders';
-import AdminProducts from './pages/admin/Products';
+import Products from './pages/admin/Products';
 import Customers from './pages/admin/Customers';
 import Analytics from './pages/admin/Analytics';
 import Coupons from './pages/admin/Coupons';
@@ -80,6 +80,7 @@ const AppContent: React.FC = () => {
             <Footer />
           </div>
         } />
+        <Route path="/cart" element={<CartPage />} />
         <Route path="/wishlist" element={<WishlistPage />} />
         <Route path="/signin" element={<SignInPage />} />
         <Route path="/signup" element={<SignUpPage />} />
@@ -101,7 +102,7 @@ const AppContent: React.FC = () => {
         }>
           <Route index element={<Dashboard />} />
           <Route path="orders" element={<Orders />} />
-          <Route path="products" element={<AdminProducts />} />
+          <Route path="products" element={<Products />} />
           <Route path="customers" element={<Customers />} />
           <Route path="analytics" element={<Analytics />} />
           <Route path="coupons" element={<Coupons />} />
