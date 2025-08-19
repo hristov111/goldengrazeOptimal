@@ -25,7 +25,7 @@ export default function ProductDetailPage() {
   });
 
   const handleAddToCart = async () => {
-    if (product.stock_quantity === 0 || (product.stock_quantity !== null && quantity > product.stock_quantity)) return;
+    if (product.stock_quantity === 0) return;
     
     if (!user) {
       navigate('/signin');
@@ -71,7 +71,7 @@ export default function ProductDetailPage() {
   };
 
   const handleBuyNow = () => {
-    if (product.stock_quantity === 0 || (product.stock_quantity !== null && quantity > product.stock_quantity)) return;
+    if (product.stock_quantity === 0) return;
     
     // Navigate to checkout with this product
     navigate('/checkout', { state: { productId: product?.id, quantity } });
@@ -381,13 +381,24 @@ export default function ProductDetailPage() {
                     {quantity}
                   </span>
                   <button
-                    onClick={() => setQuantity(quantity + 1)}
+                    onClick={() => {
+                      const maxQuantity = product.stock_quantity || 1;
+                      setQuantity(Math.min(quantity + 1, maxQuantity));
+                    }}
+                    disabled={product.stock_quantity !== null && quantity >= product.stock_quantity}
                     className="px-4 py-2 hover:bg-stone-50 transition-colors"
                   >
                     <Plus size={16} />
                   </button>
                 </div>
-                <span className="text-stone-600 text-sm">In stock</span>
+                {product.stock_quantity !== null && (
+                  <span className="text-stone-600 text-sm">
+                    {product.stock_quantity <= 5 
+                      ? `Only ${product.stock_quantity} available` 
+                      : `${product.stock_quantity} in stock`
+                    }
+                  </span>
+                )}
               </div>
             </div>
 
@@ -491,11 +502,7 @@ export default function ProductDetailPage() {
             </div>
 
             {/* Tab Content */}
-                  onClick={() => {
-                    const maxQuantity = product.stock_quantity || 1;
-                    setQuantity(Math.min(quantity + 1, maxQuantity));
-                  }}
-                  disabled={product.stock_quantity !== null && quantity >= product.stock_quantity}
+            <div className="p-8">
               {activeTab === 'description' && (
                 <div className="prose prose-stone max-w-none">
                   {product.description ? (
@@ -626,13 +633,6 @@ export default function ProductDetailPage() {
                     </button>
                   </div>
                 </div>
-              {product.stock_quantity !== null && (
-                <span className="text-stone-600 text-sm">
-                  {product.stock_quantity <= 5 
-                    ? `Only ${product.stock_quantity} available` 
-                    : `${product.stock_quantity} in stock`
-                  }
-                </span>
               )}
             </div>
           </div>
