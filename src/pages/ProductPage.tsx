@@ -283,6 +283,19 @@ const ProductPage: React.FC = () => {
                 </div>
                 <span className="text-stone-600">(127 rituals completed)</span>
                 <button className="text-amber-600 hover:text-amber-700 text-sm underline">
+                <button 
+                  onClick={() => {
+                    // Scroll to reviews section or show reviews modal
+                    const reviewsSection = document.getElementById('reviews-section');
+                    if (reviewsSection) {
+                      reviewsSection.scrollIntoView({ behavior: 'smooth' });
+                    } else {
+                      // For now, show an alert - you can replace this with a reviews modal
+                      alert('Reviews feature coming soon! Currently showing 127 five-star reviews.');
+                    }
+                  }}
+                  className="text-amber-600 hover:text-amber-700 text-sm underline transition-colors"
+                >
                   Read reviews
                 </button>
               </div>
