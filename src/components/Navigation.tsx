@@ -278,7 +278,7 @@ const Navigation: React.FC<NavigationProps> = ({ isLoggedIn, user, onSignOut }) 
                         <button
                           key={product.id}
                           onClick={() => {
-                            navigate('/product');
+                            navigate(`/products/${product.slug}`);
                             setIsProductsHovered(false);
                           }}
                           className={`w-full text-left px-6 py-4 text-white hover:text-amber-400 hover:bg-amber-400/10 rounded-lg transition-all duration-300 text-sm tracking-wide transform ${
@@ -301,7 +301,7 @@ const Navigation: React.FC<NavigationProps> = ({ isLoggedIn, user, onSignOut }) 
                               </div>
                             </div>
                             <div className="text-amber-400 text-sm font-medium">
-                              ${product.price}
+                              ${(product.price_cents / 100).toFixed(2)}
                             </div>
                           </div>
                         </button>
@@ -326,12 +326,12 @@ const Navigation: React.FC<NavigationProps> = ({ isLoggedIn, user, onSignOut }) 
                       <div className="text-amber-200 text-sm mb-2">No products available</div>
                       <button
                         onClick={() => {
-                          navigate(`/products/${product.slug}`);
+                          navigate('/products');
                           setIsProductsHovered(false);
                         }}
                         className="text-amber-400 hover:text-amber-300 text-xs underline"
                       >
-                        View products page
+                        Browse all products
                       </button>
                     </div>
                   )}
