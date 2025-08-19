@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Toggle } from 'lucide-react';
+import { Plus, Edit, Trash2, ToggleLeft as Toggle } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
 interface Coupon {
