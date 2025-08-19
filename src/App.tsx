@@ -29,11 +29,12 @@ import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import TermsOfServicePage from './pages/TermsOfServicePage';
 import Dashboard from './pages/admin/Dashboard';
 import Orders from './pages/admin/Orders';
-import Products from './pages/admin/Products';
+import AdminProducts from './pages/admin/Products';
 import Customers from './pages/admin/Customers';
 import Analytics from './pages/admin/Analytics';
 import Coupons from './pages/admin/Coupons';
-import ProductDetailPage from './pages/ProductDetailPage';
+import ProductDetailPageOld from './pages/ProductDetailPage';
+import ProductsPageOld from './pages/ProductsPage';
 
 // Create QueryClient instance
 const queryClient = new QueryClient({
@@ -76,11 +77,11 @@ const AppContent: React.FC = () => {
         <Route path="/products/:slug" element={<ProductDetailPage />} />
         <Route path="/products" element={
           <div>
-            <ProductsPage />
+            <ProductsPageOld />
             <Footer />
           </div>
         } />
-        <Route path="/cart" element={<CartPage />} />
+        <Route path="/products/:slug" element={<ProductDetailPageOld />} />
         <Route path="/wishlist" element={<WishlistPage />} />
         <Route path="/signin" element={<SignInPage />} />
         <Route path="/signup" element={<SignUpPage />} />
@@ -102,7 +103,7 @@ const AppContent: React.FC = () => {
         }>
           <Route index element={<Dashboard />} />
           <Route path="orders" element={<Orders />} />
-          <Route path="products" element={<Products />} />
+          <Route path="products" element={<AdminProducts />} />
           <Route path="customers" element={<Customers />} />
           <Route path="analytics" element={<Analytics />} />
           <Route path="coupons" element={<Coupons />} />
