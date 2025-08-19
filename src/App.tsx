@@ -33,8 +33,8 @@ import AdminProducts from './pages/admin/Products';
 import Customers from './pages/admin/Customers';
 import Analytics from './pages/admin/Analytics';
 import Coupons from './pages/admin/Coupons';
-import ProductDetailPageOld from './pages/ProductDetailPage';
-import ProductsPageOld from './pages/ProductsPage';
+import ProductDetailPage from './pages/ProductDetailPage';
+import ProductsPage from './pages/ProductsPage';
 
 // Create QueryClient instance
 const queryClient = new QueryClient({
@@ -77,11 +77,10 @@ const AppContent: React.FC = () => {
         <Route path="/products/:slug" element={<ProductDetailPage />} />
         <Route path="/products" element={
           <div>
-            <ProductsPageOld />
+            <ProductsPage />
             <Footer />
           </div>
         } />
-        <Route path="/products/:slug" element={<ProductDetailPageOld />} />
         <Route path="/wishlist" element={<WishlistPage />} />
         <Route path="/signin" element={<SignInPage />} />
         <Route path="/signup" element={<SignUpPage />} />
