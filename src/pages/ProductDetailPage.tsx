@@ -73,6 +73,17 @@ export default function ProductDetailPage() {
     navigate('/checkout', { state: { productId: product?.id, quantity } });
   };
 
+  const handleViewAllReviews = () => {
+    // Switch to reviews tab and scroll to it
+    setActiveTab('reviews');
+    setTimeout(() => {
+      const reviewsSection = document.getElementById('reviews-section');
+      if (reviewsSection) {
+        reviewsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
+  };
+
   // Lightbox component
   const Lightbox = () => {
     if (!showLightbox || !product) return null;
@@ -503,15 +514,67 @@ export default function ProductDetailPage() {
               )}
               
               {activeTab === 'reviews' && (
-                <div className="text-center py-8">
-                  <Star size={48} className="text-amber-400 mx-auto mb-4" />
-                  <h4 className="font-serif text-xl text-stone-900 mb-2">Customer Reviews</h4>
-                  <p className="text-stone-600 mb-6">
-                    See what our community is saying about this product.
-                  </p>
-                  <button className="bg-amber-400 hover:bg-amber-500 text-white px-6 py-3 tracking-widest transition-colors rounded-lg">
-                    VIEW ALL REVIEWS
-                  </button>
+                <div id="reviews-section" className="space-y-6">
+                  {/* Reviews Header */}
+                  <div className="text-center mb-8">
+                    <div className="flex items-center justify-center space-x-2 mb-4">
+                      <div className="flex space-x-1">
+                        {[...Array(5)].map((_, i) => (
+                          <Star key={i} size={20} className="text-amber-400 fill-current" />
+                        ))}
+                      </div>
+                      <span className="text-stone-700 font-medium">4.9 out of 5</span>
+                    </div>
+                    <p className="text-stone-600">Based on 127 verified reviews</p>
+                  </div>
+
+                  {/* Sample Reviews */}
+                  <div className="space-y-4">
+                    {[
+                      {
+                        name: "Sarah M.",
+                        rating: 5,
+                        date: "2 weeks ago",
+                        review: "This tallow balm has completely transformed my skin! The texture is luxurious and it absorbs beautifully without any greasy residue. I've been using it for a month and my skin has never felt softer."
+                      },
+                      {
+                        name: "Jennifer K.",
+                        rating: 5,
+                        date: "1 month ago", 
+                        review: "I was skeptical about tallow-based skincare, but this product is incredible. It's helped with my dry patches and my skin looks so much more radiant. The quality is outstanding."
+                      },
+                      {
+                        name: "Maria L.",
+                        rating: 5,
+                        date: "3 weeks ago",
+                        review: "Love the natural ingredients and the ritual aspect of using this balm. It feels so nourishing and my skin drinks it up. Will definitely be reordering!"
+                      }
+                    ].map((review, index) => (
+                      <div key={index} className="bg-stone-50 rounded-lg p-6 border border-stone-200">
+                        <div className="flex items-start justify-between mb-3">
+                          <div>
+                            <div className="font-medium text-stone-900">{review.name}</div>
+                            <div className="flex items-center space-x-2 mt-1">
+                              <div className="flex space-x-1">
+                                {[...Array(review.rating)].map((_, i) => (
+                                  <Star key={i} size={12} className="text-amber-400 fill-current" />
+                                ))}
+                              </div>
+                              <span className="text-stone-500 text-sm">{review.date}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <p className="text-stone-700 leading-relaxed">{review.review}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Load More Reviews */}
+                  <div className="text-center">
+                    <button className="bg-amber-400 hover:bg-amber-500 text-white px-8 py-3 tracking-widest transition-colors rounded-lg font-medium">
+                      LOAD MORE REVIEWS
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
