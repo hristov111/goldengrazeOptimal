@@ -164,6 +164,25 @@ export default function ProductCard({ product }: ProductCardProps) {
             </>
           )}
         </button>
+
+        {/* Add to Wishlist Button */}
+        <button
+          onClick={handleAddToWishlist}
+          disabled={isAddingToWishlist}
+          className="w-full border-2 border-stone-300 text-stone-700 hover:bg-stone-50 disabled:bg-stone-100 disabled:cursor-not-allowed py-2 px-4 tracking-widest transition-all duration-300 rounded-lg font-medium flex items-center justify-center space-x-2"
+        >
+          {isAddingToWishlist ? (
+            <>
+              <Loader2 size={14} className="animate-spin" />
+              <span className="text-sm">ADDING...</span>
+            </>
+          ) : (
+            <>
+              <Heart size={14} />
+              <span className="text-sm">ADD TO WISHLIST</span>
+            </>
+          )}
+        </button>
       </div>
 
       {/* Auth Modal would go here if needed */}
