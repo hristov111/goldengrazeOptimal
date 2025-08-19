@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Search, Filter, Grid, List, Loader2, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Search, Filter, Grid, List, Loader2, AlertCircle, ShoppingBag, Heart, Star } from 'lucide-react';
 import { database } from '../lib/supabase';
 import { useSessionUser } from '../lib/hooks/useSessionUser';
 import AuthModal from '../components/AuthModal';
