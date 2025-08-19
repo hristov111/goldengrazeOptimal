@@ -58,6 +58,7 @@ const makeMockClient = () => ({
 // Add supabase export to database object for admin access
 const databaseWithSupabase = {
   ...database,
+}
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
