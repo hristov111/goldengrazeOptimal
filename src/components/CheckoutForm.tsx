@@ -95,6 +95,12 @@ export default function CheckoutForm() {
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Calculate totals for display (moved before useEffect)
+  const subtotalCents = product ? Math.round(product.price * 100) * quantity : 0;
+  const shippingCents = 0; // Free shipping
+  const taxCents = 0; // No tax
+  const totalCents = subtotalCents + shippingCents + taxCents;
+
   // Fetch product data
   useEffect(() => {
     fetchProduct();
@@ -359,12 +365,6 @@ export default function CheckoutForm() {
       });
     }
   }, [product, loadingProduct, totalCents]);
-
-  // Calculate totals for display
-  const subtotalCents = product ? Math.round(product.price * 100) * quantity : 0;
-  const shippingCents = 0; // Free shipping
-  const taxCents = 0; // No tax
-  const totalCents = subtotalCents + shippingCents + taxCents;
 
   if (result) {
     return (
