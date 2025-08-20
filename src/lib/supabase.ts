@@ -1,5 +1,57 @@
 import { createClient } from '@supabase/supabase-js'
 
+// Declare global type for HMR-safe singleton
+declare global {
+  interface Window { 
+    __supabase?: any;
+  }
+}
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+
+// Create HMR-safe singleton client
+let supabase: any;
+
+if (!supabaseUrl || !supabaseAnonKey || supabaseUrl === 'your_supabase_url' || supabaseAnonKey === 'your_supabase_anon_key') {
+  console.warn('Missing Supabase environment variables. Please connect to Supabase to enable full functionality.')
+  supabase = makeMockClient();
+} else {
+  // Use singleton pattern with HMR safety
+  if (typeof window !== 'undefined') {
+    supabase = window.__supabase ?? (window.__supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        storageKey: 'gg_auth', // Unique storage key to prevent conflicts
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true
+      },
+      global: {
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      }
+    }));
+  } else {
+    // Server-side fallback
+    supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        storageKey: 'gg_auth',
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true
+      },
+      global: {
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      }
+    });
+  }
+}
+
 // Create mock client factory function
 const makeMockClient = () => ({
   auth: {
@@ -54,36 +106,6 @@ const makeMockClient = () => ({
   },
   rpc: () => ({ data: null, error: { message: 'Please connect to Supabase first' } })
 });
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
-
-let supabase: any;
-
-if (!supabaseUrl || !supabaseAnonKey || supabaseUrl === 'your_supabase_url' || supabaseAnonKey === 'your_supabase_anon_key') {
-  console.warn('Missing Supabase environment variables. Please connect to Supabase to enable full functionality.')
-  supabase = makeMockClient();
-} else {
-  try {
-    supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true
-      },
-      global: {
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        }
-      }
-    });
-  } catch (error) {
-    console.error('Failed to initialize Supabase client:', error);
-    // Fall back to mock client if initialization fails  
-    supabase = makeMockClient();
-  }
-}
 
 export { supabase };
 
