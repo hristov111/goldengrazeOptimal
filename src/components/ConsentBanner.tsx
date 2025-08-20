@@ -18,7 +18,7 @@ export default function ConsentBanner() {
       <div className="flex space-x-3">
         <button
           className="flex-1 bg-amber-400 hover:bg-amber-500 text-black px-4 py-2 rounded-lg font-medium text-sm transition-colors"
-          onClick={() => {
+          onClick={async () => {
             const next = { marketing: true };
             setConsent(next);
             localStorage.setItem("consent", JSON.stringify(next));
