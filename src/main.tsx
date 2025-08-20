@@ -15,7 +15,7 @@ setConsent(initialConsent);
 
 // Load TikTok pixel only if consent is already granted
 if (initialConsent.marketing) {
-  const pixelCode = import.meta.env.TIKTOK_PIXEL_CODE as string;
+  const pixelCode = import.meta.env.VITE_TIKTOK_PIXEL_CODE as string;
   console.log('🔍 TikTok Pixel Code from env:', pixelCode, typeof pixelCode);
   console.log('🔍 Marketing consent granted:', initialConsent.marketing);
   
@@ -24,8 +24,8 @@ if (initialConsent.marketing) {
     loadTikTokPixel(pixelCode);
   } else {
     if (import.meta.env.DEV) {
-      console.warn("⚠️ TIKTOK_PIXEL_CODE not configured - TikTok tracking disabled");
-      console.warn("Add TIKTOK_PIXEL_CODE=YOUR_PIXEL_ID to your .env file");
+      console.warn("⚠️ VITE_TIKTOK_PIXEL_CODE not configured - TikTok tracking disabled");
+      console.warn("Add VITE_TIKTOK_PIXEL_CODE=YOUR_PIXEL_ID to your .env file");
     }
   }
 } else {
