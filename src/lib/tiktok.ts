@@ -32,6 +32,12 @@ let eventQueue: Array<() => void> = [];
 export function loadTikTokPixel(pixelId: string) {
   if (pixelLoaded || typeof window === "undefined") return;
   
+  // Validate pixel ID before loading
+  if (!pixelId || pixelId.trim() === '' || pixelId === 'your_pixel_code_here') {
+    console.error('❌ Invalid TikTok Pixel ID provided:', pixelId);
+    return;
+  }
+  
   console.log('🎯 Loading TikTok Pixel with ID:', pixelId);
   
   (function (w: any, d: Document, t: string, k: string, s: string) {
@@ -63,15 +69,18 @@ export function loadTikTokPixel(pixelId: string) {
     w.ttq = ttq;
   })(window, document, "script", "ttq", "");
 
-  // Initialize the pixel with the ID and enable cookies
-  (window as any).ttq.load(pixelId);
+  // Initialize the pixel with the validated ID and enable cookies
+  console.log('🔧 Calling ttq.load() with pixel ID:', pixelId);
+  (window as any).ttq.load(pixelId, {
+    debug: import.meta.env.DEV // Enable debug mode in development
+  });
   (window as any).ttq.enableCookie();
   
   console.log('🎯 TikTok Pixel loaded with ID:', pixelId);
   
   // Set up ready callback to process queued events and fire page event
   (window as any).ttq.ready(() => {
-    console.log('🎯 TikTok Pixel ready, firing page event and processing', eventQueue.length, 'queued events');
+    console.log('🎯 TikTok Pixel ready with ID:', pixelId, '- firing page event and processing', eventQueue.length, 'queued events');
     
     // Fire the page event - this is crucial for pixel detection
     (window as any).ttq.page();
