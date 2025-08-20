@@ -11,7 +11,17 @@ export async function sha256(input: string): Promise<string> {
 
 type ConsentState = { marketing: boolean };
 let consentState: ConsentState = { marketing: false };
-export function setConsent(next: ConsentState) { consentState = next; }
+export function setConsent(next: ConsentState) { 
+  consentState = next; 
+  
+  // Load pixel when consent is granted
+  if (next.marketing && !pixelLoaded) {
+    const pixelCode = import.meta.env.VITE_TIKTOK_PIXEL_CODE as string;
+    if (pixelCode) {
+      loadTikTokPixel(pixelCode);
+    }
+  }
+}
 export function getConsent(): ConsentState { return consentState; }
 
 // Load TikTok pixel script once
