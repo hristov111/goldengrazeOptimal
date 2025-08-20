@@ -4,6 +4,10 @@ import App from './App.tsx';
 import './index.css';
 import { loadTikTokPixel, setConsent } from "./lib/tiktok";
 
+// Debug environment variables
+console.log('🔍 All VITE env vars:', Object.keys(import.meta.env).filter(key => key.startsWith('VITE_')));
+console.log('🔍 Raw env object:', import.meta.env);
+
 // Initialize consent from localStorage
 const saved = localStorage.getItem("consent");
 const initialConsent = saved ? JSON.parse(saved) : { marketing: false };
@@ -12,7 +16,7 @@ setConsent(initialConsent);
 // Load TikTok pixel only if consent is already granted
 if (initialConsent.marketing) {
   const pixelCode = import.meta.env.VITE_TIKTOK_PIXEL_CODE as string;
-  console.log('🔍 TikTok Pixel Code from env:', pixelCode);
+  console.log('🔍 TikTok Pixel Code from env:', pixelCode, typeof pixelCode);
   console.log('🔍 Marketing consent granted:', initialConsent.marketing);
   
   if (pixelCode && pixelCode !== 'your_pixel_code_here') {
