@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Star, Heart, ShoppingBag, Loader2, AlertCircle, Package, Truck, Shield, Plus, Minus, ZoomIn, X, ChevronLeft, ChevronRight } from 'lucide-react';
