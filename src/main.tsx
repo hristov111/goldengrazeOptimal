@@ -9,8 +9,16 @@ console.log('🔍 All VITE env vars:', Object.keys(import.meta.env).filter(key =
 console.log('🔍 Raw env object:', import.meta.env);
 
 // Initialize consent from localStorage
-const saved = localStorage.getItem("consent");
-const initialConsent = saved ? JSON.parse(saved) : { marketing: false };
+let initialConsent = { marketing: false };
+try {
+  const saved = localStorage.getItem("consent");
+  if (saved) {
+    initialConsent = JSON.parse(saved);
+  }
+} catch (error) {
+  console.warn('Failed to parse consent from localStorage:', error);
+  localStorage.removeItem("consent"); // Clear invalid data
+}
 setConsent(initialConsent);
 
 // Load TikTok pixel only if consent is already granted
@@ -21,15 +29,11 @@ if (initialConsent.marketing) {
   
   if (pixelCode && pixelCode.trim() !== '' && pixelCode !== 'your_pixel_code_here') {
     console.log('🚀 Loading TikTok Pixel...');
-    loadTikTokPixel(pixelCode);
-    
-    // Also fire a page event after a short delay to ensure pixel is ready
-    setTimeout(() => {
-      if ((window as any).ttq) {
-        console.log('🎯 Firing delayed page event for pixel detection');
-        (window as any).ttq.page();
-      }
-    }, 1000);
+    try {
+      loadTikTokPixel(pixelCode);
+    } catch (error) {
+      console.error('❌ Failed to load TikTok Pixel:', error);
+    }
   } else {
     console.error("❌ Invalid or missing VITE_TIKTOK_PIXEL_CODE:", pixelCode);
     console.error("Expected: 20-character pixel ID, got:", typeof pixelCode, pixelCode?.length, "characters");

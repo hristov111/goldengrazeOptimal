@@ -21,14 +21,22 @@ export default function ConsentBanner() {
           onClick={async () => {
             const next = { marketing: true };
             setConsent(next);
-            localStorage.setItem("consent", JSON.stringify(next));
+            try {
+              localStorage.setItem("consent", JSON.stringify(next));
+            } catch (error) {
+              console.warn('Failed to save consent to localStorage:', error);
+            }
             
             // Load TikTok pixel when consent is granted
             const pixelCode = import.meta.env.VITE_TIKTOK_PIXEL_CODE as string;
             if (pixelCode && pixelCode !== 'your_pixel_code_here') {
-              const { loadTikTokPixel } = await import('../lib/tiktok');
-              loadTikTokPixel(pixelCode);
-              console.log('🎯 TikTok Pixel loaded after consent granted');
+              try {
+                const { loadTikTokPixel } = await import('../lib/tiktok');
+                loadTikTokPixel(pixelCode);
+                console.log('🎯 TikTok Pixel loaded after consent granted');
+              } catch (error) {
+                console.error('❌ Failed to load TikTok Pixel after consent:', error);
+              }
             }
             
             setOpen(false);
@@ -41,7 +49,11 @@ export default function ConsentBanner() {
           onClick={() => {
             const next = { marketing: false };
             setConsent(next);
-            localStorage.setItem("consent", JSON.stringify(next));
+            try {
+              localStorage.setItem("consent", JSON.stringify(next));
+            } catch (error) {
+              console.warn('Failed to save consent to localStorage:', error);
+            }
             setOpen(false);
           }}
         >
