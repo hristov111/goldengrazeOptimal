@@ -31,6 +31,9 @@ let eventQueue: Array<() => void> = [];
 
 export function loadTikTokPixel(pixelId: string) {
   if (pixelLoaded || typeof window === "undefined") return;
+  
+  console.log('🎯 Loading TikTok Pixel:', pixelId);
+  
   (function (w: any, d: Document, t: string, k: string, s: string) {
     w.TiktokAnalyticsObject = k;
     const ttq = (w[k] = w[k] || []);
@@ -60,11 +63,15 @@ export function loadTikTokPixel(pixelId: string) {
     w.ttq = ttq;
   })(window, document, "script", "ttq", "");
 
+  // Initialize the pixel with the ID
   (window as any).ttq.load(pixelId);
   (window as any).ttq.page(); // optional page event
   
+  console.log('🎯 TikTok Pixel loaded with ID:', pixelId);
+  
   // Set up ready callback to process queued events
   (window as any).ttq.ready(() => {
+    console.log('🎯 TikTok Pixel ready, processing', eventQueue.length, 'queued events');
     pixelReady = true;
     // Process all queued events
     eventQueue.forEach(fn => fn());

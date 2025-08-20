@@ -11,14 +11,21 @@ setConsent(initialConsent);
 
 // Load TikTok pixel only if consent is already granted
 if (initialConsent.marketing) {
-  const PIXEL_CODE = import.meta.env.VITE_TIKTOK_PIXEL_CODE as string;
-  if (PIXEL_CODE) {
-    loadTikTokPixel(PIXEL_CODE);
+  const pixelCode = import.meta.env.VITE_TIKTOK_PIXEL_CODE as string;
+  console.log('🔍 TikTok Pixel Code from env:', pixelCode);
+  console.log('🔍 Marketing consent granted:', initialConsent.marketing);
+  
+  if (pixelCode && pixelCode !== 'your_pixel_code_here') {
+    console.log('🚀 Loading TikTok Pixel...');
+    loadTikTokPixel(pixelCode);
   } else {
     if (import.meta.env.DEV) {
-      console.warn("VITE_TIKTOK_PIXEL_CODE not configured - TikTok tracking disabled");
+      console.warn("⚠️ VITE_TIKTOK_PIXEL_CODE not configured - TikTok tracking disabled");
+      console.warn("Add VITE_TIKTOK_PIXEL_CODE=YOUR_PIXEL_ID to your .env file");
     }
   }
+} else {
+  console.log('🚫 TikTok Pixel not loaded - marketing consent not granted');
 }
 
 createRoot(document.getElementById('root')!).render(
