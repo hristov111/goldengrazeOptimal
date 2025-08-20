@@ -32,6 +32,7 @@ import Customers from './pages/admin/Customers';
 import Analytics from './pages/admin/Analytics';
 import Coupons from './pages/admin/Coupons';
 import ProductDetailPage from './pages/ProductDetailPage';
+import ConsentBanner from './components/ConsentBanner';
 
 // Create QueryClient instance
 const queryClient = new QueryClient({
@@ -99,6 +100,9 @@ const AppContent: React.FC = () => {
           <Route path="coupons" element={<Coupons />} />
         </Route>
       </Routes>
+      
+      {/* Consent Banner */}
+      <ConsentBanner />
     </div>
   );
 };

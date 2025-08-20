@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { identifyPII } from "../lib/tiktok";
 
 const SignInPage: React.FC = () => {
   const navigate = useNavigate();
@@ -61,6 +62,12 @@ const SignInPage: React.FC = () => {
       if (!result.success && result.error) {
         setAuthError(result.error);
       } else if (result.success) {
+        // Identify the signed-in user
+        await identifyPII({
+          email: formData.email,
+          external_id: formData.email, // Use email as external_id
+        });
+        
         // Redirect to home page on successful login
         navigate('/');
       }

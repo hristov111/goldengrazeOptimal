@@ -6,6 +6,7 @@ import { getProductBySlug } from "../api/products";
 import SEO from "../components/SEO";
 import { useSessionUser } from '../lib/hooks/useSessionUser';
 import { database } from '../lib/supabase';
+import { TTQ, identifyPII } from "../lib/tiktok";
 
 export default function ProductDetailPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -24,6 +25,31 @@ export default function ProductDetailPage() {
     enabled: !!slug,
   });
 
+  // Track ViewContent when product loads
+  useEffect(() => {
+    if (!product) return;
+    
+    TTQ.viewContent({
+      contents: [{
+        content_id: product.id,
+        content_type: "product",
+        content_name: product.name,
+      }],
+      value: product.price_cents / 100,
+      currency: "USD",
+    });
+  }, [product]);
+
+  // Identify user if available
+  useEffect(() => {
+    if (user?.email) {
+      identifyPII({
+        email: user.email,
+        external_id: user.id,
+      });
+    }
+  }, [user]);
+
   const handleAddToCart = async () => {
     if (product.stock_quantity === 0 || (product.stock_quantity !== null && quantity > product.stock_quantity)) return;
     
@@ -38,6 +64,17 @@ export default function ProductDetailPage() {
     try {
       const { error } = await database.addToCart(user.id, product.id, quantity);
       if (error) throw error;
+      
+      // Track AddToCart event
+      TTQ.addToCart({
+        contents: [{
+          content_id: product.id,
+          content_type: "product",
+          content_name: product.name,
+        }],
+        value: (product.price_cents / 100) * quantity,
+        currency: "USD",
+      });
       
       // Show success feedback
       window.dispatchEvent(new CustomEvent('cartChanged'));
@@ -61,6 +98,17 @@ export default function ProductDetailPage() {
       const { error } = await database.addToWishlist(user.id, product.id);
       if (error) throw error;
       
+      // Track AddToWishlist event
+      TTQ.addToWishlist({
+        contents: [{
+          content_id: product.id,
+          content_type: "product",
+          content_name: product.name,
+        }],
+        value: product.price_cents / 100,
+        currency: "USD",
+      });
+      
       // Show success feedback
       window.dispatchEvent(new CustomEvent('wishlistChanged'));
     } catch (error: any) {
@@ -72,6 +120,19 @@ export default function ProductDetailPage() {
 
   const handleBuyNow = () => {
     if (product.stock_quantity === 0 || (product.stock_quantity !== null && quantity > product.stock_quantity)) return;
+    
+    // Track InitiateCheckout event
+    if (product) {
+      TTQ.initiateCheckout({
+        contents: [{
+          content_id: product.id,
+          content_type: "product",
+          content_name: product.name,
+        }],
+        value: (product.price_cents / 100) * quantity,
+        currency: "USD",
+      });
+    }
     
     // Navigate to checkout with this product
     navigate('/checkout', { state: { productId: product?.id, quantity } });

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { TTQ, identifyPII } from "../lib/tiktok";
 
 // Password strength checker
 const getPasswordStrength = (password: string) => {
@@ -107,6 +108,23 @@ const SignUpPage: React.FC = () => {
       } else if (result.message) {
         setSuccessMessage(result.message);
       } else if (result.success) {
+       // Track registration completion
+       TTQ.completeRegistration({
+         contents: [{ 
+           content_id: "registration", 
+           content_type: "product_group", 
+           content_name: "user_signup" 
+         }],
+         value: 0,
+         currency: "USD",
+       });
+       
+       // Identify the new user
+       await identifyPII({
+         email: formData.email,
+         external_id: formData.email, // Use email as external_id for new users
+       });
+       
         // Redirect to home page on successful signup
         navigate('/');
       }

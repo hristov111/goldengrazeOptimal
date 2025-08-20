@@ -5,6 +5,7 @@ import { database, supabase } from '../../lib/supabase';
 import { useSessionUser } from '../../lib/hooks/useSessionUser';
 import Money from '../common/Money';
 import { useProductStock } from '../../lib/hooks/useProductStock';
+import { TTQ } from "../../lib/tiktok";
 
 interface CartItem {
   id: string;
@@ -128,6 +129,21 @@ const CartList: React.FC<CartListProps> = ({ onItemsChange }) => {
       setItems(prev => prev.map(item => 
         item.id === itemId ? { ...item, quantity: newQuantity } : item
       ));
+      
+      // Track AddToCart event for quantity increases
+      const item = items.find(i => i.id === itemId);
+      if (item && newQuantity > item.quantity) {
+        const addedQuantity = newQuantity - item.quantity;
+        TTQ.addToCart({
+          contents: [{
+            content_id: item.product.id,
+            content_type: "product",
+            content_name: item.product.name,
+          }],
+          value: (item.product.price * addedQuantity),
+          currency: "USD",
+        });
+      }
       
       // Notify navigation to update counter
       window.dispatchEvent(new CustomEvent('cartChanged'));

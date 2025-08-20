@@ -5,6 +5,7 @@ import { Search, Filter, Grid, List, Loader2, AlertCircle } from 'lucide-react';
 import { listProducts, getCategories } from "../api/products";
 import ProductCard from "../components/ProductCard";
 import SEO from "../components/SEO";
+import { TTQ } from "../lib/tiktok";
 
 export default function ProductsPage() {
   const [params, setParams] = useSearchParams();
@@ -42,6 +43,20 @@ export default function ProductsPage() {
       params.set("page", "1"); // Reset to first page when filtering
     }
     setParams(params, { replace: true });
+    
+    // Track search event when query changes
+    if (key === 'q' && value) {
+      TTQ.search({
+        contents: [{
+          content_id: "search",
+          content_type: "product_group",
+          content_name: "catalog",
+        }],
+        value: 0,
+        currency: "USD",
+        search_string: value,
+      });
+    }
   };
 
   // Prefetch product details on hover

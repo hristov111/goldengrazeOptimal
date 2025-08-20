@@ -4,6 +4,7 @@ import { Star, Heart, ShoppingBag, Loader2 } from 'lucide-react';
 import type { Product } from "../api/products";
 import { useSessionUser } from '../lib/hooks/useSessionUser';
 import { database } from '../lib/supabase';
+import { TTQ } from "../lib/tiktok";
 
 interface ProductCardProps {
   product: Product;
@@ -35,6 +36,17 @@ export default function ProductCard({ product }: ProductCardProps) {
       const { error } = await database.addToCart(user.id, product.id, 1);
       if (error) throw error;
       
+      // Track AddToCart event
+      TTQ.addToCart({
+        contents: [{
+          content_id: product.id,
+          content_type: "product",
+          content_name: product.name,
+        }],
+        value: product.price_cents / 100,
+        currency: "USD",
+      });
+      
       // Notify navigation to update counter
       window.dispatchEvent(new CustomEvent('cartChanged'));
     } catch (error: any) {
@@ -58,6 +70,17 @@ export default function ProductCard({ product }: ProductCardProps) {
       const { error } = await database.addToWishlist(user.id, product.id);
       if (error) throw error;
       
+      // Track AddToWishlist event
+      TTQ.addToWishlist({
+        contents: [{
+          content_id: product.id,
+          content_type: "product",
+          content_name: product.name,
+        }],
+        value: product.price_cents / 100,
+        currency: "USD",
+      });
+      
       // Notify navigation to update counter
       window.dispatchEvent(new CustomEvent('wishlistChanged'));
     } catch (error: any) {
@@ -72,6 +95,17 @@ export default function ProductCard({ product }: ProductCardProps) {
     e.stopPropagation();
     
     if (product.stock_quantity === 0) return;
+    
+    // Track InitiateCheckout event
+    TTQ.initiateCheckout({
+      contents: [{
+        content_id: product.id,
+        content_type: "product",
+        content_name: product.name,
+      }],
+      value: product.price_cents / 100,
+      currency: "USD",
+    });
     
     // Navigate to checkout with this product
     navigate('/checkout', { state: { productId: product.id, quantity: 1 } });

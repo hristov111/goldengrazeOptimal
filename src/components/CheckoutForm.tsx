@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { User, Mail, Phone, MapPin, FileText, Loader2, CheckCircle, Package } from 'lucide-react';
 import { supabase } from "../lib/supabase";
 import { database } from "../lib/supabase";
+import { TTQ, identifyPII } from "../lib/tiktok";
 
 type Shipping = {
   name: string; 
@@ -272,6 +273,18 @@ export default function CheckoutForm() {
     setError(null); 
     setResult(null);
     
+    // Track AddPaymentInfo event (when payment form is submitted)
+    if (product) {
+      TTQ.addPaymentInfo({
+        contents: [{
+          content_id: product.id,
+          content_type: "product",
+          content_name: product.name,
+        }],
+        value: (totalCents / 100),
+        currency: "USD",
+      });
+    }
     try {
       // Get session for user ID (optional - guest checkout allowed)
       const { data } = await supabase.auth.getSession();
@@ -300,6 +313,30 @@ export default function CheckoutForm() {
         return;
       }
       
+      // Track successful order placement
+      if (result && product) {
+        TTQ.placeAnOrder({
+          contents: [{
+            content_id: product.id,
+            content_type: "product",
+            content_name: product.name,
+          }],
+          value: totalCents / 100,
+          currency: "USD",
+        });
+        
+        // Track Purchase event (final conversion)
+        TTQ.purchase({
+          contents: [{
+            content_id: product.id,
+            content_type: "product",
+            content_name: product.name,
+          }],
+          value: totalCents / 100,
+          currency: "USD",
+        });
+      }
+      
       setResult(result);
     } catch (e: any) {
       setError(e.message || String(e));
@@ -307,6 +344,21 @@ export default function CheckoutForm() {
       setLoading(false);
     }
   }
+
+  // Track InitiateCheckout when checkout form loads
+  useEffect(() => {
+    if (product && !loadingProduct) {
+      TTQ.initiateCheckout({
+        contents: [{
+          content_id: product.id,
+          content_type: "product",
+          content_name: product.name,
+        }],
+        value: totalCents / 100,
+        currency: "USD",
+      });
+    }
+  }, [product, loadingProduct, totalCents]);
 
   // Calculate totals for display
   const subtotalCents = product ? Math.round(product.price * 100) * quantity : 0;

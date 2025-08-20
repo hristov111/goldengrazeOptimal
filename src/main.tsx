@@ -2,6 +2,19 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
+import { loadTikTokPixel, setConsent } from "./lib/tiktok";
+
+// Load TikTok pixel if configured
+const PIXEL_ID = import.meta.env.VITE_TIKTOK_PIXEL_ID as string;
+if (PIXEL_ID) {
+  loadTikTokPixel(PIXEL_ID);
+} else {
+  console.warn("VITE_TIKTOK_PIXEL_ID not configured - TikTok tracking disabled");
+}
+
+// Initialize consent from localStorage
+const saved = localStorage.getItem("consent");
+setConsent(saved ? JSON.parse(saved) : { marketing: false });
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
