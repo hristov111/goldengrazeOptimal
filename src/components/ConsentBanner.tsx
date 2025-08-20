@@ -24,7 +24,7 @@ export default function ConsentBanner() {
             localStorage.setItem("consent", JSON.stringify(next));
             
             // Load TikTok pixel when consent is granted
-            const pixelCode = import.meta.env.VITE_TIKTOK_PIXEL_CODE as string;
+            const pixelCode = import.meta.env.TIKTOK_PIXEL_CODE as string;
             if (pixelCode && pixelCode !== 'your_pixel_code_here') {
               const { loadTikTokPixel } = await import('../lib/tiktok');
               loadTikTokPixel(pixelCode);

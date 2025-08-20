@@ -32,7 +32,7 @@ let eventQueue: Array<() => void> = [];
 export function loadTikTokPixel(pixelId: string) {
   if (pixelLoaded || typeof window === "undefined") return;
   
-  console.log('🎯 Loading TikTok Pixel:', pixelId);
+  console.log('🎯 Loading TikTok Pixel with ID:', pixelId);
   
   (function (w: any, d: Document, t: string, k: string, s: string) {
     w.TiktokAnalyticsObject = k;
