@@ -5,11 +5,11 @@ import './index.css';
 import { loadTikTokPixel, setConsent } from "./lib/tiktok";
 
 // Load TikTok pixel if configured
-const PIXEL_ID = import.meta.env.VITE_TIKTOK_PIXEL_ID as string;
+const PIXEL_ID = import.meta.env.VITE_TIKTOK_PIXEL_CODE as string;
 if (PIXEL_ID) {
   loadTikTokPixel(PIXEL_ID);
 } else {
-  console.warn("VITE_TIKTOK_PIXEL_ID not configured - TikTok tracking disabled");
+  console.warn("VITE_TIKTOK_PIXEL_CODE not configured - TikTok tracking disabled");
 }
 
 // Initialize consent from localStorage

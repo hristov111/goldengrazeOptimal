@@ -16,6 +16,9 @@ export function getConsent(): ConsentState { return consentState; }
 
 // Load TikTok pixel script once
 let pixelLoaded = false;
+let pixelReady = false;
+let eventQueue: Array<() => void> = [];
+
 export function loadTikTokPixel(pixelId: string) {
   if (pixelLoaded || typeof window === "undefined") return;
   (function (w: any, d: Document, t: string, k: string, s: string) {
@@ -49,6 +52,15 @@ export function loadTikTokPixel(pixelId: string) {
 
   (window as any).ttq.load(pixelId);
   (window as any).ttq.page(); // optional page event
+  
+  // Set up ready callback to process queued events
+  (window as any).ttq.ready(() => {
+    pixelReady = true;
+    // Process all queued events
+    eventQueue.forEach(fn => fn());
+    eventQueue = [];
+  });
+  
   pixelLoaded = true;
 }
 
@@ -66,8 +78,12 @@ type CommonPayload = {
 
 type EventOptions = { event_id?: string };
 
-function ensurePixel() {
-  if (!(window as any).ttq) throw new Error("TikTok pixel not loaded");
+function executeOrQueue(fn: () => void) {
+  if (pixelReady && (window as any).ttq) {
+    fn();
+  } else {
+    eventQueue.push(fn);
+  }
 }
 
 export async function identifyPII(pii: {
@@ -76,12 +92,14 @@ export async function identifyPII(pii: {
   external_id?: string;
 }) {
   if (!getConsent().marketing) return;
-  ensurePixel();
-  const payload: any = {};
-  if (pii.email) payload.email = await sha256(pii.email);
-  if (pii.phone_number) payload.phone_number = await sha256(pii.phone_number);
-  if (pii.external_id) payload.external_id = await sha256(pii.external_id);
-  (window as any).ttq.identify(payload);
+  
+  executeOrQueue(async () => {
+    const payload: any = {};
+    if (pii.email) payload.email = await sha256(pii.email);
+    if (pii.phone_number) payload.phone_number = await sha256(pii.phone_number);
+    if (pii.external_id) payload.external_id = await sha256(pii.external_id);
+    (window as any).ttq.identify(payload);
+  });
 }
 
 function withEventId(opts?: EventOptions) {
@@ -98,9 +116,11 @@ export function trackEvent<T extends CommonPayload>(
   opts?: EventOptions
 ) {
   if (!getConsent().marketing) return;
-  ensurePixel();
-  const enriched = { ...payload, currency: payload.currency ?? "USD" };
-  (window as any).ttq.track(name, enriched, withEventId(opts));
+  
+  executeOrQueue(() => {
+    const enriched = { ...payload, currency: payload.currency ?? "USD" };
+    (window as any).ttq.track(name, enriched, withEventId(opts));
+  });
 }
 
 // Specific helpers (strongly typed wrappers)
