@@ -63,15 +63,19 @@ export function loadTikTokPixel(pixelId: string) {
     w.ttq = ttq;
   })(window, document, "script", "ttq", "");
 
-  // Initialize the pixel with the ID
+  // Initialize the pixel with the ID and enable cookies
   (window as any).ttq.load(pixelId);
-  (window as any).ttq.page(); // optional page event
+  (window as any).ttq.enableCookie();
   
   console.log('🎯 TikTok Pixel loaded with ID:', pixelId);
   
-  // Set up ready callback to process queued events
+  // Set up ready callback to process queued events and fire page event
   (window as any).ttq.ready(() => {
-    console.log('🎯 TikTok Pixel ready, processing', eventQueue.length, 'queued events');
+    console.log('🎯 TikTok Pixel ready, firing page event and processing', eventQueue.length, 'queued events');
+    
+    // Fire the page event - this is crucial for pixel detection
+    (window as any).ttq.page();
+    
     pixelReady = true;
     // Process all queued events
     eventQueue.forEach(fn => fn());

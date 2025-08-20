@@ -22,6 +22,14 @@ if (initialConsent.marketing) {
   if (pixelCode && pixelCode !== 'your_pixel_code_here') {
     console.log('🚀 Loading TikTok Pixel...');
     loadTikTokPixel(pixelCode);
+    
+    // Also fire a page event after a short delay to ensure pixel is ready
+    setTimeout(() => {
+      if ((window as any).ttq) {
+        console.log('🎯 Firing delayed page event for pixel detection');
+        (window as any).ttq.page();
+      }
+    }, 1000);
   } else {
     if (import.meta.env.DEV) {
       console.warn("⚠️ VITE_TIKTOK_PIXEL_CODE not configured - TikTok tracking disabled");
